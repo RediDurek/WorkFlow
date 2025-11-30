@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>WorkFlow - Employee Portal</title>
+    
+    <!-- Tailwind CSS via CDN per il funzionamento immediato nella preview -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#f0f9ff',
+                100: '#e0f2fe',
+                500: '#0ea5e9',
+                600: '#0284c7',
+                900: '#0c4a6e',
+              }
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+      /* Custom scrollbar hiding for cleaner mobile look */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* iOS Safe Area Support */
+      .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom, 20px);
+      }
+      .pt-safe {
+        padding-top: env(safe-area-inset-top, 20px);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.0/client",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+  }
+}
+</script>
+</head>
+  <body class="bg-gray-50 text-gray-900 antialiased select-none overscroll-none">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

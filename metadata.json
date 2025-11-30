@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Copy of WorkFlow",
+  "description": "A streamlined employee portal for tracking work hours, breaks, and managing leave requests with AI assistance.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
