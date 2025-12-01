@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, TimeLog, LeaveRequest, Language, LeaveType } from '../types';
 import { translations } from '../constants/translations';
-import { X, Calendar, Clock, AlertCircle, Phone, Mail, User as UserIcon, Shield } from 'lucide-react';
+import { X, Calendar, Clock, AlertCircle, Mail, User as UserIcon } from 'lucide-react';
 
 interface EmployeeDetailModalProps {
   user: User;
@@ -12,9 +12,10 @@ interface EmployeeDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   language: Language;
+  onUpdateContract?: (contractType: 'DETERMINATO' | 'INDETERMINATO', contractEndDate?: string) => Promise<void>;
 }
 
-export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, logs, leaves, isOpen, onClose, language }) => {
+export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, logs, leaves, isOpen, onClose, language, onUpdateContract }) => {
   const t = translations[language];
   if (!isOpen) return null;
 
@@ -22,6 +23,15 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
       const locale = language === 'EN' ? 'en-US' : language.toLowerCase();
       return new Date(timestamp).toLocaleDateString(locale);
   };
+
+  const [contractType, setContractType] = useState<'DETERMINATO' | 'INDETERMINATO'>(user.contractType || 'INDETERMINATO');
+  const [contractEnd, setContractEnd] = useState<string>(user.contractEndDate || '');
+  const [savingContract, setSavingContract] = useState(false);
+
+  useEffect(() => {
+    setContractType(user.contractType || 'INDETERMINATO');
+    setContractEnd(user.contractEndDate || '');
+  }, [user]);
 
   // Stats Calculation
   const totalLeaves = leaves.length;
@@ -51,6 +61,66 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex items-center gap-2 text-gray-700 bg-gray-50 px-3 py-2 rounded-lg flex-1"><Mail size={16} /> {user.email}</div>
                     <div className="flex items-center gap-2 text-gray-700 bg-gray-50 px-3 py-2 rounded-lg flex-1"><Calendar size={16} /> {t.joinedDate}: {formatDate(user.createdAt)}</div>
+                </div>
+                <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-100 space-y-2">
+                  {(() => {
+                    const type = user.contractType || 'INDETERMINATO';
+                    const end = user.contractEndDate ? new Date(user.contractEndDate) : null;
+                    let daysLeft: number | null = null;
+                    if (type === 'DETERMINATO' && end) {
+                      daysLeft = Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                    }
+                    const isExpiring = daysLeft !== null && daysLeft <= 30;
+                    const badgeColor = type === 'INDETERMINATO' ? 'bg-green-100 text-green-700' : isExpiring ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-800';
+                    return (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-[11px] font-bold text-gray-500 uppercase">Contratto</div>
+                          <div className="text-sm text-gray-800">
+                            {type === 'INDETERMINATO' ? 'Indeterminato' : 'Determinato'}
+                            {type === 'DETERMINATO' && end && (
+                              <span className="ml-2 text-gray-500">Scadenza: {formatDate(end.getTime())}</span>
+                            )}
+                          </div>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${badgeColor}`}>
+                          {type === 'INDETERMINATO' ? 'Indeterminato' : daysLeft !== null ? `Scade in ${daysLeft} gg` : 'Determinato'}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+                  {onUpdateContract && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-end">
+                      <div className="md:col-span-1">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase block mb-1">Tipo</label>
+                        <select value={contractType} onChange={e => setContractType(e.target.value as any)} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                          <option value="INDETERMINATO">Indeterminato</option>
+                          <option value="DETERMINATO">Determinato</option>
+                        </select>
+                      </div>
+                      {contractType === 'DETERMINATO' && (
+                        <div className="md:col-span-1">
+                          <label className="text-[11px] font-bold text-gray-500 uppercase block mb-1">Scadenza</label>
+                          <input type="date" value={contractEnd} onChange={e => setContractEnd(e.target.value)} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+                        </div>
+                      )}
+                      <div className="md:col-span-1">
+                        <button
+                          onClick={async () => {
+                            if (!onUpdateContract) return;
+                            setSavingContract(true);
+                            await onUpdateContract(contractType, contractEnd || undefined);
+                            setSavingContract(false);
+                          }}
+                          className="w-full bg-brand-600 text-white rounded-lg py-2 text-sm font-bold hover:bg-brand-700 disabled:opacity-60"
+                          disabled={savingContract}
+                        >
+                          {savingContract ? 'Salvataggio...' : 'Salva contratto'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
             </div>
 

@@ -19,6 +19,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
   const [isDeleting, setIsDeleting] = useState(false);
   const [org, setOrg] = useState<Organization | undefined>(undefined);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [contractInfo, setContractInfo] = useState<{ type: string; badge: string; label: string }>({ type: user.contractType || 'INDETERMINATO', badge: 'bg-green-100 text-green-700', label: 'Indeterminato' });
   
   // Export State
   const [exportMonth, setExportMonth] = useState<number>(new Date().getMonth());
@@ -32,17 +33,28 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
       }
     };
     loadOrg();
+    // compute contract badge
+    const type = user.contractType || 'INDETERMINATO';
+    let badge = 'bg-green-100 text-green-700';
+    let label = type === 'INDETERMINATO' ? 'Indeterminato' : 'Determinato';
+    if (type === 'DETERMINATO' && user.contractEndDate) {
+      const days = Math.ceil((new Date(user.contractEndDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      if (days <= 30) badge = 'bg-red-100 text-red-700';
+      else badge = 'bg-yellow-100 text-yellow-800';
+      label += ` (scade ${new Date(user.contractEndDate).toLocaleDateString(language === 'EN' ? 'en-US' : language.toLowerCase())})`;
+    }
+    setContractInfo({ type, badge, label });
   }, [user]);
 
   const handleExport = async () => {
-    const csvContent = await StorageService.exportDataAsCSV(user.role === 'EMPLOYEE' ? user.id : undefined, user.orgId, exportMonth, exportYear, language);
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const docContent = await StorageService.exportDataAsDoc(user.role === 'EMPLOYEE' ? user.id : undefined, user.orgId, exportMonth, exportYear, language);
+    const blob = new Blob([docContent], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     
     const monthName = new Date(exportYear, exportMonth).toLocaleString('default', { month: 'long' });
-    link.setAttribute('download', `My_Report_${exportYear}_${monthName}.csv`);
+    link.setAttribute('download', `My_Report_${exportYear}_${monthName}.doc`);
     
     document.body.appendChild(link);
     link.click();
@@ -99,7 +111,11 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
               <div className="bg-brand-100 p-3 rounded-full text-brand-600"><UserIcon size={32} /></div>
               <div><h2 className="text-lg font-bold text-gray-900">{user.name}</h2><p className="text-gray-500 text-sm">{user.email}</p></div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-400 bg-gray-50 p-3 rounded-xl"><Building size={16} /><span>{t.role}: <strong>{user.role}</strong></span></div>
+          <div className="flex items-center gap-2 text-sm text-gray-400 bg-gray-50 p-3 rounded-xl mb-3"><Building size={16} /><span>{t.role}: <strong>{user.role}</strong></span></div>
+          <div className="flex items-center justify-between text-sm bg-gray-50 p-3 rounded-xl border border-gray-100">
+            <div className="text-gray-700 font-semibold">Contratto</div>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${contractInfo.badge}`}>{contractInfo.label}</span>
+          </div>
       </div>
 
       <div className="mb-6">

@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     }
     await supabase.from('sessions').insert({ id: token, user_id: user.id });
 
-    const res = NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, orgId: user.org_id, role: user.role, status: user.status, isEmailVerified: user.is_email_verified } });
+    const res = NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, orgId: user.org_id, role: user.role, status: user.status, isEmailVerified: user.is_email_verified, contractType: user.contract_type, contractEndDate: user.contract_end_date } });
     res.cookies.set('wf_session', token, { httpOnly: true, path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
     return res;
   } catch (err: any) {

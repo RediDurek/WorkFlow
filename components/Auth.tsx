@@ -44,6 +44,8 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [contractType, setContractType] = useState<'DETERMINATO' | 'INDETERMINATO'>('INDETERMINATO');
+  const [contractEndDate, setContractEndDate] = useState('');
 
   const resetForm = () => {
     setError(''); setSuccessMessage(''); setEmail(''); setPassword(''); setName(''); setOrgName(''); setOrgCode(''); setTaxId(''); setVerificationCode(''); setDemoCode(''); setPrivacyAccepted(false); setIsLoading(false); setNewPassword('');
@@ -59,7 +61,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
       if (mode === 'REGISTER_ORG') {
         res = await fetch('/api/auth/registerOrg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orgName, adminName: name, email, password, taxId }) });
       } else {
-        res = await fetch('/api/auth/joinOrg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orgCode: orgCode.toUpperCase(), name, email, password, taxId }) });
+        res = await fetch('/api/auth/joinOrg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orgCode: orgCode.toUpperCase(), name, email, password, taxId, contractType, contractEndDate }) });
       }
       const data = await res.json();
       if (res.ok && data.success) {
@@ -198,21 +200,9 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
 
   return (
     <>
-    {showTermsModal && <LegalModal title="Terms" onClose={() => setShowTermsModal(false)}><p>
-    <strong>1. Oggetto del Servizio</strong><br/>WorkFlow fornisce un software gestionale SaaS per la rilevazione presenze e gestione ferie. Il servizio è offerto in abbonamento mensile.<br/><br/>
-    <strong>2. Costi e Periodo di Prova</strong><br/>Il servizio prevede un periodo di prova gratuito di 5 giorni. Al termine, l'abbonamento si rinnova automaticamente al costo di 8,00€/mese salvo disdetta.<br/><br/>
-    <strong>3. Rinnovo Automatico e Disdetta</strong><br/>L'abbonamento si rinnova mensilmente. L'utente può disdire in qualsiasi momento dalle impostazioni del profilo o tramite lo store di riferimento. La disdetta blocca i rinnovi successivi.<br/><br/>
-    <strong>4. Limitazioni di Responsabilità</strong><br/>WorkFlow non è responsabile per errori nel calcolo ore dovuti a mancata connessione o uso improprio. I dati esportati sono a supporto e non sostituiscono i registri ufficiali.<br/><br/>
-    <strong>5. Foro Competente</strong><br/>Per qualsiasi controversia è competente il foro di Milano.
-    </p></LegalModal>}
+    {showTermsModal && <LegalModal title={t.termsTitle} onClose={() => setShowTermsModal(false)}><p>{t.termsBody}</p></LegalModal>}
     
-    {showPrivacyModal && <LegalModal title="Privacy Policy" onClose={() => setShowPrivacyModal(false)}><p>
-    <strong>Informativa Privacy (GDPR UE 2016/679)</strong><br/><br/>
-    <strong>1. Titolare del Trattamento</strong><br/>Il titolare dei dati è l'azienda che utilizza il software per i propri dipendenti.<br/><br/>
-    <strong>2. Dati Trattati</strong><br/>Raccogliamo nome, email, orari di lavoro e (se attivata) la geolocalizzazione puntuale al momento della timbratura.<br/><br/>
-    <strong>3. Finalità</strong><br/>I dati servono esclusivamente per l'esecuzione del contratto di lavoro e la gestione presenze.<br/><br/>
-    <strong>4. Diritti dell'Utente</strong><br/>Hai diritto di accedere, rettificare, cancellare ed esportare i tuoi dati in qualsiasi momento tramite la sezione 'Profilo'.
-    </p></LegalModal>}
+    {showPrivacyModal && <LegalModal title={t.privacyTitle} onClose={() => setShowPrivacyModal(false)}><p>{t.privacyBody}</p></LegalModal>}
 
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 relative">
       <div className="absolute top-4 right-4 z-10">
@@ -243,6 +233,23 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
             {mode === 'REGISTER_ORG' && <div><label className="block text-xs font-bold text-gray-500 mb-1 ml-1">{t.orgName}</label><input type="text" value={orgName} onChange={(e) => setOrgName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3" required /></div>}
             {mode === 'REGISTER_EMPLOYEE' && <div><label className="block text-xs font-bold text-gray-500 mb-1 ml-1">{t.orgCode}</label><input type="text" value={orgCode} onChange={(e) => setOrgCode(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3" required /></div>}
             {mode !== 'LOGIN' && <div><label className="block text-xs font-bold text-gray-500 mb-1 ml-1">{t.taxId}</label><input type="text" value={taxId} onChange={(e) => setTaxId(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 uppercase" required /></div>}
+            {mode === 'REGISTER_EMPLOYEE' && (
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">Tipo di contratto</label>
+                  <select value={contractType} onChange={e => setContractType(e.target.value as any)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                    <option value="INDETERMINATO">Indeterminato</option>
+                    <option value="DETERMINATO">Determinato</option>
+                  </select>
+                </div>
+                {contractType === 'DETERMINATO' && (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">Data scadenza</label>
+                    <input type="date" value={contractEndDate} onChange={(e) => setContractEndDate(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3" />
+                  </div>
+                )}
+              </div>
+            )}
             
             <div><label className="block text-xs font-bold text-gray-500 mb-1 ml-1">{t.email}</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3" required /></div>
             <div className="relative">

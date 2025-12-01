@@ -5,7 +5,7 @@ import { hashPassword } from '../../../../lib/server/hash';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { orgCode, name, email, password, taxId } = body;
+    const { orgCode, name, email, password, taxId, contractType, contractEndDate } = body;
     if (!orgCode || !name || !email || !password) return NextResponse.json({ error: 'Missing' }, { status: 400 });
 
     const supabase = supabaseServer();
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     const hashed = hashPassword(password);
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const { data: user, error: userErr } = await supabase.from('users').insert({ org_id: org.id, name, email: email.toLowerCase(), tax_id: taxId, password: hashed, role: 'EMPLOYEE', status: 'PENDING_APPROVAL', is_email_verified: false, verification_code: verificationCode, privacy_accepted: true, has_seen_tutorial: false }).select().single();
+    const { data: user, error: userErr } = await supabase.from('users').insert({ org_id: org.id, name, email: email.toLowerCase(), tax_id: taxId, password: hashed, role: 'EMPLOYEE', status: 'PENDING_APPROVAL', is_email_verified: false, verification_code: verificationCode, privacy_accepted: true, has_seen_tutorial: false, contract_type: body.contractType || 'INDETERMINATO', contract_end_date: body.contractEndDate || null }).select().single();
     if (userErr || !user) return NextResponse.json({ error: 'User creation failed' }, { status: 500 });
 
     return NextResponse.json({ success: true, email: user.email, demoCode: verificationCode });

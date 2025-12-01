@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const hashed = hashPassword(password);
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const { data: user, error: userErr } = await supabase.from('users').insert({ org_id: org.id, name: adminName, email: email.toLowerCase(), tax_id: taxId, password: hashed, role: 'ADMIN', status: 'ACTIVE', is_email_verified: false, verification_code: verificationCode, privacy_accepted: true, has_seen_tutorial: false }).select().single();
+    const { data: user, error: userErr } = await supabase.from('users').insert({ org_id: org.id, name: adminName, email: email.toLowerCase(), tax_id: taxId, password: hashed, role: 'ADMIN', status: 'ACTIVE', is_email_verified: false, verification_code: verificationCode, privacy_accepted: true, has_seen_tutorial: false, contract_type: 'INDETERMINATO', contract_end_date: null }).select().single();
     if (userErr || !user) return NextResponse.json({ error: 'User creation failed' }, { status: 500 });
 
     return NextResponse.json({ success: true, email: user.email, demoCode: verificationCode });

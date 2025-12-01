@@ -25,7 +25,7 @@ export async function GET(req: Request) {
     if (!user) return NextResponse.json({ user: null }, { status: 200 });
 
     // map to camelCase minimal user
-    const mapped = { id: user.id, name: user.name, email: user.email, orgId: user.org_id, role: user.role, status: user.status, isEmailVerified: user.is_email_verified };
+    const mapped = { id: user.id, name: user.name, email: user.email, orgId: user.org_id, role: user.role, status: user.status, isEmailVerified: user.is_email_verified, contractType: user.contract_type, contractEndDate: user.contract_end_date };
     return NextResponse.json({ user: mapped });
   } catch (err: any) {
     console.error('Session route error:', err);

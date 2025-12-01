@@ -248,14 +248,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
       }
   };
 
+  const handleUpdateContract = async (empId: string, type: 'DETERMINATO' | 'INDETERMINATO', endDate?: string) => {
+    await StorageService.updateContractInfo(empId, type, endDate);
+    const allUsers = await StorageService.getOrgEmployees(user.orgId);
+    const refreshed = allUsers.find((u: User) => u.id === empId);
+    if (refreshed) setSelectedEmployee(refreshed);
+  };
+
+  const handleDownloadSingleReport = async (empId: string) => {
+     const docContent = await StorageService.exportDataAsDoc(empId, user.orgId, exportMonth, exportYear, language);
+     const blob = new Blob([docContent], { type: 'application/msword' });
+     const url = URL.createObjectURL(blob);
+     const link = document.createElement('a');
+     const monthName = new Date(exportYear, exportMonth).toLocaleString('default', { month: 'long' });
+     link.href = url;
+     link.setAttribute('download', `Report_${monthName}_${exportYear}_${empId}.doc`);
+     document.body.appendChild(link);
+     link.click();
+     document.body.removeChild(link);
+  };
+
   const handleExportCSV = async () => {
     if (!orgDetails?.isPro || orgDetails?.subscriptionStatus === 'EXPIRED') {
         setSubscriptionMode('UPGRADE');
         setShowSubscriptionModal(true);
         return;
     }
-    const csvContent = await StorageService.exportDataAsCSV(undefined, user.orgId, exportMonth, exportYear, language);
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const docContent = await StorageService.exportDataAsDoc(undefined, user.orgId, exportMonth, exportYear, language);
+    const blob = new Blob([docContent], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -436,6 +456,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
                 user={selectedEmployee}
                 logs={selectedEmpLogs}
                 leaves={selectedEmpLeaves}
+                onUpdateContract={(type, endDate) => selectedEmployee ? handleUpdateContract(selectedEmployee.id, type, endDate) : Promise.resolve()}
                 onClose={() => setSelectedEmployee(null)}
                 language={language}
             />

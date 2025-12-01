@@ -1,7 +1,6 @@
+﻿import { Language } from '../types';
 
-import { Language } from '../types';
-
-export const translations = {
+export const translations: Record<Language, any> = {
   IT: {
     // Auth
     loginTitle: "Bentornato",
@@ -35,7 +34,11 @@ export const translations = {
     backToLogin: "Torna al Login",
     genericError: "Si è verificato un errore. Riprova.",
     invalidCode: "Codice non valido",
-    
+    termsTitle: "Termini di Servizio",
+    termsBody: "WorkFlow è un SaaS per presenze, turni e ferie. Include 5 giorni di prova gratuita e rinnovo mensile a 8€/mese salvo disdetta. Il titolare è responsabile dell'uso corretto, della veridicità dei dati e della protezione delle credenziali. Gli export (report/CSV) sono di supporto e non sostituiscono registri ufficiali. Il servizio può essere sospeso per abuso o mancato pagamento. Foro competente: Milano.",
+    privacyTitle: "Informativa Privacy",
+    privacyBody: "Titolare: la tua azienda. Dati: nome, email, orari di lavoro, log di accesso e, se attiva, geolocalizzazione al clock-in. Finalità: gestione presenze/permessi e adempimenti contrattuali. Conservazione: per la durata del rapporto e secondo legge. Diritti: accesso, rettifica, cancellazione, portabilità e opposizione via Profilo o contattando il titolare. Dati condivisi solo con fornitori cloud strettamente necessari.",
+
     // Navbar
     navTime: "Orario",
     navLeaves: "Permessi",
@@ -54,7 +57,7 @@ export const translations = {
     locating: "Rilevamento...",
     todayActivity: "Attività di oggi",
     noActivity: "Nessuna attività oggi.",
-    
+
     // Admin Dashboard
     adminDash: "Dashboard Aziendale",
     inviteCode: "Codice Invito",
@@ -72,9 +75,9 @@ export const translations = {
     selectMonth: "Seleziona Mese",
     selectYear: "Seleziona Anno",
     deleteEmp: "Rimuovi Dipendente",
-    confirmDeleteEmp: "Sei sicuro di voler rimuovere questo dipendente dall'azienda? Questa azione è irreversibile.",
+    confirmDeleteEmp: "Sei sicuro di voler rimuovere questo dipendente? Azione irreversibile.",
     viewProfile: "Analisi Dipendente",
-    
+
     // Employee Detail
     empDetailTitle: "Scheda Dipendente",
     statsOverview: "Panoramica Assenze",
@@ -107,7 +110,7 @@ export const translations = {
     uploadDoc: "Carica Documento/Foto",
     viewDoc: "Vedi Documento",
     close: "Chiudi",
-    
+
     // Profile & Subs
     myProfile: "Il mio Profilo",
     manageAccount: "Gestisci il tuo account",
@@ -121,8 +124,7 @@ export const translations = {
     cancelRenew: "Disdici Rinnovo Automatico",
     renewCancelled: "Rinnovo Disattivato",
     howItWorks: "Come funziona?",
-    
-    // Modals
+
     trialBanner: "PROVA GRATUITA ATTIVA",
     daysLeft: "giorni rimanenti",
     expiredBanner: "PERIODO DI PROVA SCADUTO",
@@ -133,28 +135,26 @@ export const translations = {
     startTrialBtn: "Inizia 5 Giorni Gratis",
     cancelSuccess: "Abbonamento disdetto con successo.",
 
-    // Tutorial
     tutNext: "Avanti",
     tutPrev: "Indietro",
     tutFinish: "Inizia a lavorare!",
     tutSkip: "Salta",
-    
+
     tutEmp1Title: "Benvenuto in WorkFlow!",
-    tutEmp1Desc: "Questa è la tua app per gestire il lavoro in modo semplice. Qui puoi registrare le tue ore e vedere il riepilogo giornaliero.",
+    tutEmp1Desc: "Questa è la tua app per gestire il lavoro in modo semplice. Registra le ore e vedi il riepilogo giornaliero.",
     tutEmp2Title: "Registra le tue Ore",
-    tutEmp2Desc: "Quando arrivi al lavoro, premi 'Inizia Turno'. L'app registrerà l'orario e la tua posizione GPS. Ricordati di usare i tasti Pausa!",
-    tutEmp3Title: "Gestione Permessi & AI",
-    tutEmp3Desc: "Vai nella sezione 'Permessi' per chiedere ferie o malattia. Puoi caricare foto di certificati e usare l'Intelligenza Artificiale per scrivere la motivazione in modo professionale!",
-    
-    // Admin Steps
+    tutEmp2Desc: "Premi 'Inizia Turno' all'arrivo. Registriamo orario e posizione GPS. Ricorda le pause!",
+    tutEmp3Title: "Permessi & AI",
+    tutEmp3Desc: "In 'Permessi' chiedi ferie/malattia. Carica certificati e usa l'AI per motivazioni migliori.",
+
     tutAdm1Title: "Benvenuto Titolare!",
-    tutAdm1Desc: "Da questa Dashboard hai il controllo completo. Vedi chi sta lavorando in tempo reale, dove si trova e quante ore ha fatto.",
+    tutAdm1Desc: "Controlla chi lavora, dove si trova e quante ore ha accumulato.",
     tutAdm2Title: "Invita i Dipendenti",
-    tutAdm2Desc: "Condividi il 'Codice Azienda' (che trovi in alto a destra) con i tuoi dipendenti. Loro lo useranno per registrarsi nell'app.",
+    tutAdm2Desc: "Condividi il 'Codice Azienda' (in alto a destra) con i dipendenti.",
     tutAdm3Title: "Gestione Permessi",
-    tutAdm3Desc: "Nella sezione 'Permessi' riceverai le richieste di ferie o malattia del tuo team. Potrai vedere gli allegati e approvare o rifiutare con un click.",
+    tutAdm3Desc: "Approva o rifiuta ferie/malattia e consulta gli allegati.",
     tutAdm4Title: "Export Buste Paga",
-    tutAdm4Desc: "A fine mese, usa il tasto 'Scarica Report' per ottenere un file Excel con tutti i calcoli fatti, pronto da inviare al commercialista.",
+    tutAdm4Desc: "A fine mese scarica il report pronto per il commercialista.",
 
     months: ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
   },
@@ -190,6 +190,10 @@ export const translations = {
     backToLogin: "Back to Login",
     genericError: "Something went wrong. Please try again.",
     invalidCode: "Invalid code",
+    termsTitle: "Terms of Service",
+    termsBody: "WorkFlow is a SaaS for attendance, shift and leave management. 5-day free trial, then renews monthly at €8 until cancelled. Account holders are responsible for proper use, accuracy of entered data and safeguarding credentials. Exports (reports/CSV) are support only and do not replace official records. Service may be suspended for misuse or non-payment. Governing jurisdiction: Milan, Italy.",
+    privacyTitle: "Privacy Policy",
+    privacyBody: "Controller: your company. Data: name, email, working hours, access logs and, if enabled, geolocation at clock-in. Purpose: attendance/leave management and contractual obligations. Retention: for the relationship duration and as required by law. Rights: access, rectify, delete, portability, objection via Profile or by contacting the controller. Data shared only with essential cloud providers.",
 
     navTime: "Time",
     navLeaves: "Leaves",
@@ -206,6 +210,7 @@ export const translations = {
     locating: "Locating...",
     todayActivity: "Today's Activity",
     noActivity: "No activity today.",
+
     adminDash: "Company Dashboard",
     inviteCode: "Invite Code",
     regenCode: "Regenerate Code",
@@ -224,8 +229,7 @@ export const translations = {
     deleteEmp: "Remove Employee",
     confirmDeleteEmp: "Are you sure you want to remove this employee? This cannot be undone.",
     viewProfile: "Employee Analysis",
-    
-    // Employee Detail
+
     empDetailTitle: "Employee Profile",
     statsOverview: "Absence Overview",
     totalLeaves: "Total Requests",
@@ -279,7 +283,6 @@ export const translations = {
     cancelSuccess: "Subscription cancelled successfully.",
     howItWorks: "How it works?",
 
-    // Tutorial
     tutNext: "Next",
     tutPrev: "Prev",
     tutFinish: "Get Started!",
@@ -288,18 +291,18 @@ export const translations = {
     tutEmp1Title: "Welcome to WorkFlow!",
     tutEmp1Desc: "This is your app to manage work easily. Track your hours and see your daily summary here.",
     tutEmp2Title: "Track your Hours",
-    tutEmp2Desc: "Use the 'Clock In' button when you arrive. We track time and GPS location. Remember to log your breaks!",
+    tutEmp2Desc: "Use 'Clock In' when you arrive. We track time and GPS. Remember to log your breaks!",
     tutEmp3Title: "Leaves & AI",
-    tutEmp3Desc: "Go to the 'Leaves' tab to request time off. You can upload photos of certificates and use our AI to write professional requests for you!",
+    tutEmp3Desc: "Go to 'Leaves' to request time off. Upload certificates and use AI to write professional requests.",
 
     tutAdm1Title: "Welcome Owner!",
-    tutAdm1Desc: "From this Dashboard, you have full control. See who is working in real-time, their location, and total hours.",
+    tutAdm1Desc: "From this Dashboard, see who is working in real-time, their location, and total hours.",
     tutAdm2Title: "Invite Code",
-    tutAdm2Desc: "Share the 'Company Code' (top right) with your employees so they can register in the app.",
+    tutAdm2Desc: "Share the 'Company Code' (top right) with employees to register.",
     tutAdm3Title: "Manage Leaves",
-    tutAdm3Desc: "In the 'Leaves' section, you can approve or reject time-off requests and view attached documents.",
+    tutAdm3Desc: "Approve/reject time-off requests and view attachments.",
     tutAdm4Title: "Easy Payroll",
-    tutAdm4Desc: "At the end of the month, use 'Download Report' to get a perfect Excel file for your accountant.",
+    tutAdm4Desc: "At month-end, 'Download Report' for an accountant-ready file.",
 
     months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
   },
@@ -331,10 +334,14 @@ export const translations = {
     sendCode: "Enviar Código",
     newPass: "Nueva Contraseña",
     resetBtn: "Cambiar Contraseña",
-    resetSuccess: "¡Contraseña actualizada! Inicia sesión.",
+    resetSuccess: "Contraseña actualizada. Inicia sesión.",
     backToLogin: "Volver",
     genericError: "Ha ocurrido un error. Inténtalo de nuevo.",
     invalidCode: "Código no válido",
+    termsTitle: "Términos del Servicio",
+    termsBody: "WorkFlow es un SaaS para asistencia, turnos y permisos. Incluye 5 días de prueba y luego se renueva mensualmente (8€/mes) salvo cancelación. El titular es responsable del uso correcto, de la veracidad de los datos y de proteger las credenciales. Los exportes (reportes/CSV) son de apoyo y no sustituyen registros oficiales. El servicio puede suspenderse por abuso o impago.",
+    privacyTitle: "Política de Privacidad",
+    privacyBody: "Responsable: tu empresa. Datos: nombre, email, horarios, registros de acceso y, si se activa, geolocalización al fichar. Finalidad: gestión de asistencia/permisos y obligaciones contractuales. Conservación: durante la relación y según la ley. Derechos: acceso, rectificación, borrado, portabilidad y oposición desde Perfil o contactando al responsable. Datos solo con proveedores cloud necesarios.",
 
     navTime: "Horario",
     navLeaves: "Permisos",
@@ -351,6 +358,7 @@ export const translations = {
     locating: "Localizando...",
     todayActivity: "Actividad de hoy",
     noActivity: "Sin actividad hoy.",
+
     adminDash: "Panel de Empresa",
     inviteCode: "Código Invitación",
     regenCode: "Regenerar Código",
@@ -369,8 +377,7 @@ export const translations = {
     deleteEmp: "Eliminar Empleado",
     confirmDeleteEmp: "¿Seguro que quieres eliminar a este empleado? Es irreversible.",
     viewProfile: "Análisis Empleado",
-    
-    // Employee Detail
+
     empDetailTitle: "Ficha Empleado",
     statsOverview: "Resumen Ausencias",
     totalLeaves: "Solicitudes Totales",
@@ -423,8 +430,7 @@ export const translations = {
     startTrialBtn: "Empezar 5 Días Gratis",
     cancelSuccess: "Suscripción cancelada.",
     howItWorks: "¿Cómo funciona?",
-    
-    // Tutorial
+
     tutNext: "Siguiente",
     tutPrev: "Anterior",
     tutFinish: "¡Empezar!",
@@ -435,16 +441,16 @@ export const translations = {
     tutEmp2Title: "Registra tus Horas",
     tutEmp2Desc: "Usa 'Iniciar Turno' al llegar. Registramos hora y GPS. ¡Recuerda marcar las pausas!",
     tutEmp3Title: "Permisos con IA",
-    tutEmp3Desc: "Ve a 'Permisos' para pedir días libres. ¡Puedes subir fotos de justificantes y usar la IA para escribir la solicitud!",
+    tutEmp3Desc: "Ve a 'Permisos' para pedir días libres. Puedes subir fotos de justificantes y usar la IA para escribir la solicitud.",
 
     tutAdm1Title: "¡Bienvenido Jefe!",
     tutAdm1Desc: "Desde aquí tienes control total. Ve quién trabaja en tiempo real, ubicación y horas totales.",
     tutAdm2Title: "Código de Invitación",
     tutAdm2Desc: "Comparte el 'Código Empresa' (arriba a la derecha) con tus empleados para que se unan.",
     tutAdm3Title: "Gestionar Permisos",
-    tutAdm3Desc: "En 'Permisos', aprueba o rechaza solicitudes de tu equipo y ve los documentos adjuntos.",
+    tutAdm3Desc: "Aprueba o rechaza solicitudes y revisa documentos adjuntos.",
     tutAdm4Title: "Nóminas Fáciles",
-    tutAdm4Desc: "A fin de mes, usa 'Descargar Informe' para obtener un Excel perfecto para el contable.",
+    tutAdm4Desc: "Al final del mes, descarga un Excel listo para el contable.",
 
     months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
   },
@@ -453,7 +459,7 @@ export const translations = {
     loginDesc: "Entrez vos identifiants.",
     registerOrgTitle: "Créer Société",
     registerOrgDesc: "Gérez les quarts.",
-    registerEmpTitle: "Rejoindre l'Équipe",
+    registerEmpTitle: "Rejoindre l'équipe",
     registerEmpDesc: "Entrez le code employeur.",
     name: "Nom Complet",
     orgName: "Nom Société",
@@ -480,6 +486,10 @@ export const translations = {
     backToLogin: "Retour",
     genericError: "Une erreur s'est produite. Réessayez.",
     invalidCode: "Code invalide",
+    termsTitle: "Conditions d'utilisation",
+    termsBody: "WorkFlow est un SaaS pour gérer présences, plannings et congés. Essai gratuit 5 jours puis renouvellement mensuel (8€/mois) sauf résiliation. Le titulaire est responsable du bon usage, de l’exactitude des données et de la protection des identifiants. Les exports sont un support et ne remplacent pas les registres officiels. Suspension possible en cas d’abus ou de non-paiement.",
+    privacyTitle: "Politique de Confidentialité",
+    privacyBody: "Responsable : votre entreprise. Données : nom, email, horaires, journaux d’accès et, si activé, géolocalisation au pointage. Finalité : gestion des présences/absences et obligations contractuelles. Conservation : durée de la relation et obligations légales. Droits : accès, rectification, suppression, portabilité et opposition via Profil ou en contactant le responsable. Partage uniquement avec fournisseurs cloud nécessaires.",
 
     navTime: "Horaires",
     navLeaves: "Congés",
@@ -496,6 +506,7 @@ export const translations = {
     locating: "Localisation...",
     todayActivity: "Activité du jour",
     noActivity: "Aucune activité.",
+
     adminDash: "Tableau de Bord",
     inviteCode: "Code Invitation",
     regenCode: "Régénérer Code",
@@ -514,8 +525,7 @@ export const translations = {
     deleteEmp: "Supprimer Employé",
     confirmDeleteEmp: "Êtes-vous sûr de vouloir supprimer cet employé ? Irréversible.",
     viewProfile: "Analyse Employé",
-    
-    // Employee Detail
+
     empDetailTitle: "Fiche Employé",
     statsOverview: "Aperçu Absences",
     totalLeaves: "Total Demandes",
@@ -568,30 +578,29 @@ export const translations = {
     startTrialBtn: "Démarrer 5 Jours Gratuits",
     cancelSuccess: "Abonnement annulé.",
     howItWorks: "Comment ça marche ?",
-    
-    // Tutorial
+
     tutNext: "Suivant",
     tutPrev: "Précédent",
     tutFinish: "C'est parti !",
     tutSkip: "Passer",
 
     tutEmp1Title: "Bienvenue sur WorkFlow !",
-    tutEmp1Desc: "Votre application pour gérer le travail simplement. Suivez vos heures et votre activité quotidienne.",
+    tutEmp1Desc: "Votre app pour gérer le travail simplement. Suivez vos heures et votre activité quotidienne.",
     tutEmp2Title: "Enregistrez vos heures",
     tutEmp2Desc: "Utilisez 'Commencer' en arrivant. Nous notons l'heure et le lieu GPS. Pensez aux pauses !",
     tutEmp3Title: "Congés & IA",
-    tutEmp3Desc: "Allez dans 'Congés' pour faire une demande. Vous pouvez joindre des photos et utiliser l'IA pour rédiger la demande !",
+    tutEmp3Desc: "Dans 'Congés', faites une demande. Ajoutez des photos et utilisez l'IA pour rédiger.",
 
     tutAdm1Title: "Bienvenue Patron !",
-    tutAdm1Desc: "D'ici, vous contrôlez tout. Voyez qui travaille en temps réel, leur position et les heures totales.",
+    tutAdm1Desc: "D'ici, vous contrôlez tout. Voyez qui travaille, où et combien d'heures.",
     tutAdm2Title: "Code d'Invitation",
-    tutAdm2Desc: "Partagez le 'Code Société' (en haut à droite) avec vos employés pour qu'ils s'inscrivent.",
+    tutAdm2Desc: "Partagez le 'Code Société' (en haut à droite) avec vos employés.",
     tutAdm3Title: "Gérer les Congés",
-    tutAdm3Desc: "Dans la section 'Congés', approuvez ou rejetez les demandes et consultez les justificatifs.",
+    tutAdm3Desc: "Approuvez ou rejetez les demandes et consultez les justificatifs.",
     tutAdm4Title: "Paies Faciles",
-    tutAdm4Desc: "En fin de mois, utilisez 'Télécharger Rapport' pour obtenir un Excel prêt pour le comptable.",
+    tutAdm4Desc: "En fin de mois, téléchargez un Excel prêt pour le comptable.",
 
-    months: ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octubre", "Novembre", "Décembre"]
+    months: ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
   },
   DE: {
     loginTitle: "Willkommen",
@@ -625,6 +634,10 @@ export const translations = {
     backToLogin: "Zurück",
     genericError: "Es ist ein Fehler aufgetreten. Bitte erneut versuchen.",
     invalidCode: "Ungültiger Code",
+    termsTitle: "Nutzungsbedingungen",
+    termsBody: "WorkFlow ist ein SaaS für Arbeitszeit-, Schicht- und Urlaubsverwaltung. 5 Tage gratis, danach 8€/Monat bis zur Kündigung. Der Kontoinhaber ist verantwortlich für korrekte Nutzung, Datenrichtigkeit und Schutz der Zugangsdaten. Exporte sind Hilfsmittel und ersetzen keine offiziellen Aufzeichnungen. Dienst kann bei Missbrauch oder Nichtzahlung gesperrt werden.",
+    privacyTitle: "Datenschutzerklärung",
+    privacyBody: "Verantwortlich: Ihr Unternehmen. Daten: Name, E-Mail, Arbeitszeiten, Zugriffsprotokolle und ggf. Geolokalisierung beim Stempeln. Zweck: Anwesenheits- und Abwesenheitsverwaltung. Aufbewahrung: während der Geschäftsbeziehung und laut Gesetz. Rechte: Auskunft, Berichtigung, Löschung, Portabilität, Widerspruch über Profil oder Kontakt. Daten werden nur mit notwendigen Cloud-Anbietern geteilt.",
 
     navTime: "Zeit",
     navLeaves: "Urlaub",
@@ -641,6 +654,7 @@ export const translations = {
     locating: "Standort...",
     todayActivity: "Heutige Aktivität",
     noActivity: "Keine Aktivität.",
+
     adminDash: "Firmen-Dashboard",
     inviteCode: "Einladungscode",
     regenCode: "Code Generieren",
@@ -659,8 +673,7 @@ export const translations = {
     deleteEmp: "Mitarbeiter Löschen",
     confirmDeleteEmp: "Sind Sie sicher? Dies kann nicht rückgängig gemacht werden.",
     viewProfile: "Mitarbeiteranalyse",
-    
-    // Employee Detail
+
     empDetailTitle: "Mitarbeiterkartei",
     statsOverview: "Abwesenheitsübersicht",
     totalLeaves: "Anfragen Gesamt",
@@ -714,7 +727,6 @@ export const translations = {
     cancelSuccess: "Abo storniert.",
     howItWorks: "Wie funktioniert es?",
 
-    // Tutorial
     tutNext: "Weiter",
     tutPrev: "Zurück",
     tutFinish: "Los geht's!",

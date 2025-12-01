@@ -72,6 +72,8 @@ export interface User {
   resetCode?: string; 
   privacyAccepted: boolean;
   hasSeenTutorial: boolean;
+  contractType?: 'DETERMINATO' | 'INDETERMINATO';
+  contractEndDate?: string;
   createdAt: number;
 }
 
