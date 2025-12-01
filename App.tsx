@@ -25,22 +25,36 @@ const App: React.FC = () => {
     }
 
     const initUser = async () => {
-      const storedUser = await StorageService.getSessionUser();
-      if (storedUser) setUser(storedUser);
+      try {
+        const resp = await fetch('/api/auth/session');
+        const data = await resp.json();
+        if (resp.ok && data.user) setUser(data.user);
+      } catch (err) {
+        console.error('Init session error', err);
+      }
     };
     initUser();
   }, []);
 
   const handleLogin = (newUser: User) => setUser(newUser);
   const handleLogout = () => {
-    StorageService.logout();
-    setUser(null);
-    setActiveTab('dashboard');
+    (async () => {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (err) { console.error('Logout error', err); }
+      setUser(null);
+      setActiveTab('dashboard');
+    })();
   };
 
   const refreshUser = async () => {
-      const storedUser = await StorageService.getSessionUser();
-      if (storedUser) setUser(storedUser);
+      try {
+        const resp = await fetch('/api/auth/session');
+        const data = await resp.json();
+        if (resp.ok && data.user) setUser(data.user);
+      } catch (err) {
+        console.error('Refresh session error', err);
+      }
   };
 
   if (!user) {

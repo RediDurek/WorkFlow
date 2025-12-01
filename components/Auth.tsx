@@ -3,7 +3,6 @@
 
 import React, { useState } from 'react';
 import { User, Language } from '../types';
-import { StorageService } from '../services/storageService';
 import { UserPlus, LogIn, Building2, Eye, EyeOff, Mail, ArrowLeft, CheckSquare, Square, X, FileText, LockKeyhole, CreditCard } from 'lucide-react';
 import { translations } from '../constants/translations';
 
@@ -56,16 +55,19 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
     if(!privacyAccepted) { setError(language === 'IT' ? "Devi accettare Termini e Privacy." : "Accept Terms required."); return; }
     setError(''); setIsLoading(true);
     try {
-      let result;
-      if (mode === 'REGISTER_ORG') result = await StorageService.registerOrg(orgName, name, email, password, taxId);
-      else result = await StorageService.joinOrg(orgCode.toUpperCase(), name, email, password, taxId);
-
-      if (result.success) {
+      let res;
+      if (mode === 'REGISTER_ORG') {
+        res = await fetch('/api/auth/registerOrg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orgName, adminName: name, email, password, taxId }) });
+      } else {
+        res = await fetch('/api/auth/joinOrg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orgCode: orgCode.toUpperCase(), name, email, password, taxId }) });
+      }
+      const data = await res.json();
+      if (res.ok && data.success) {
         setMode('VERIFY_EMAIL');
-        setDemoCode(result.demoCode || '');
+        setDemoCode(data.demoCode || '');
         setSuccessMessage(t.verifyDesc);
       } else {
-        setError(result.error || 'Error');
+        setError(data.error || 'Error');
       }
     } catch (err) { setError('Error'); } finally { setIsLoading(false); }
   };
@@ -74,14 +76,21 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
     e.preventDefault();
     setError(''); setIsLoading(true);
     try {
-      const { user, error } = await StorageService.login(email, password);
-      if (user) onLogin(user);
-      else {
-        if (error?.includes('verificata')) {
-           setMode('VERIFY_EMAIL');
-           const code = await StorageService.resendCode(email);
-           if(code) setDemoCode(code);
-        } else { setError(error || 'Error'); }
+      const resp = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      const json = await resp.json();
+      if (resp.ok && json.user) {
+        onLogin(json.user);
+      } else {
+        const err = json.error || 'Error';
+        if (err.includes('verified') || err.toLowerCase().includes('email not verified') || err.toLowerCase().includes('verificat')) {
+          setMode('VERIFY_EMAIL');
+          const r = await fetch('/api/auth/resendCode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+          const d = await r.json();
+          if (r.ok && d.code) setDemoCode(d.code);
+          else setError(err);
+        } else {
+          setError(err);
+        }
       }
     } catch (err) { setError('Error'); } finally { setIsLoading(false); }
   };
@@ -89,22 +98,25 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setSuccessMessage(''); setIsLoading(true);
     try {
-      const { user, error } = await StorageService.verifyEmail(email, verificationCode);
-      if (user) onLogin(user);
-      else if (error && error.includes('Attendi')) { setMode('LOGIN'); setSuccessMessage(error); resetForm(); setEmail(email); }
-      else setError(error || 'Invalid code');
+      const resp = await fetch('/api/auth/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code: verificationCode }) });
+      const data = await resp.json();
+      if (resp.ok && data.user) {
+        onLogin(data.user);
+      } else if (data.error && data.error.includes('Attendi')) { setMode('LOGIN'); setSuccessMessage(data.error); resetForm(); setEmail(email); }
+      else setError(data.error || 'Invalid code');
     } catch (err) { setError('Error'); } finally { setIsLoading(false); }
   };
 
   const handleInitiateReset = async (e: React.FormEvent) => {
       e.preventDefault(); setError(''); setIsLoading(true);
       try {
-          const res = await StorageService.initiatePasswordReset(email);
-          if (res.success && res.demoCode) {
-              setDemoCode(res.demoCode);
-          } else {
-              setError(res.error || 'Error');
-          }
+        const resp = await fetch('/api/auth/reset/initiate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+        const data = await resp.json();
+        if (resp.ok && data.success && data.demoCode) {
+          setDemoCode(data.demoCode);
+        } else {
+          setError(data.error || 'Error');
+        }
       } catch (err) { setError('Error'); } finally { setIsLoading(false); }
   };
 
@@ -112,14 +124,15 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
       e.preventDefault(); setError(''); setIsLoading(true);
       if (newPassword.length < 6) { setError(t.passShort); setIsLoading(false); return; }
       try {
-          const res = await StorageService.completePasswordReset(email, verificationCode, newPassword);
-          if(res.success) {
-              alert(t.resetSuccess);
-              resetForm();
-              setMode('LOGIN');
-          } else {
-              setError(res.error || 'Error');
-          }
+        const resp = await fetch('/api/auth/reset/complete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code: verificationCode, newPass: newPassword }) });
+        const data = await resp.json();
+        if (resp.ok && data.success) {
+          alert(t.resetSuccess);
+          resetForm();
+          setMode('LOGIN');
+        } else {
+          setError(data.error || 'Error');
+        }
       } catch(err) { setError('Error'); } finally { setIsLoading(false); }
   };
 

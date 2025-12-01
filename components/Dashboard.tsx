@@ -9,6 +9,19 @@ import { OnboardingTutorial } from './OnboardingTutorial';
 import { EmployeeDetailModal } from './EmployeeDetailModal';
 import { translations } from '../constants/translations';
 
+// Fallback UUID generator for environments where crypto.randomUUID is not available
+const generateUUID = (): string => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback: generate a v4 UUID manually
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 interface DashboardProps {
   user: User;
   language: Language;
@@ -223,25 +236,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
       }
   };
 
-  const handleOpenEmployeeDetail = (empId: string) => {
-      const allUsers = StorageService.getOrgEmployees(user.orgId);
-      const emp = allUsers.find(u => u.id === empId);
+  const handleOpenEmployeeDetail = async (empId: string) => {
+      const allUsers = await StorageService.getOrgEmployees(user.orgId);
+      const emp = allUsers.find((u: User) => u.id === empId);
       if (emp) {
-          const allLogs = StorageService.getLogs(empId);
-          const allLeaves = StorageService.getLeaveRequests(empId);
+          const allLogs = await StorageService.getLogs(empId);
+          const allLeaves = await StorageService.getLeaveRequests(empId);
           setSelectedEmployee(emp);
           setSelectedEmpLogs(allLogs);
           setSelectedEmpLeaves(allLeaves);
       }
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     if (!orgDetails?.isPro || orgDetails?.subscriptionStatus === 'EXPIRED') {
         setSubscriptionMode('UPGRADE');
         setShowSubscriptionModal(true);
         return;
     }
-    const csvContent = StorageService.exportDataAsCSV(undefined, user.orgId, exportMonth, exportYear, language);
+    const csvContent = await StorageService.exportDataAsCSV(undefined, user.orgId, exportMonth, exportYear, language);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -278,7 +291,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
       } catch (error) { locationName = "N/A"; } finally { setIsLocating(false); }
     }
     const newLog: TimeLog = {
-      id: crypto.randomUUID(), userId: user.id, orgId: user.orgId, timestamp: Date.now(),
+      id: generateUUID(), userId: user.id, orgId: user.orgId, timestamp: Date.now(),
       type, dateString: new Date().toISOString().split('T')[0], location: locationName
     };
     await StorageService.addLog(newLog);
