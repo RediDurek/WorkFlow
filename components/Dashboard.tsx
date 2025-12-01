@@ -525,7 +525,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
 
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><Users className="text-brand-600" /> {t.empStatus}</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {orgEmployees.length === 0 ? (
                     <div className="col-span-full text-center py-12 bg-white rounded-2xl border border-dashed border-gray-300">
                         <UserPlus className="mx-auto text-gray-300 mb-3" size={48} />

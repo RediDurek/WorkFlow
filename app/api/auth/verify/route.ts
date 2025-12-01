@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '../../../../lib/server/supabaseServer';
+import { randomUUID } from 'crypto';
 
 export async function POST(req: Request) {
   try {
@@ -14,12 +15,23 @@ export async function POST(req: Request) {
     const { error } = await supabase.from('users').update({ is_email_verified: true, verification_code: null }).eq('id', user.id);
     if (error) return NextResponse.json({ error: 'Update failed' }, { status: 500 });
 
-    if (user.role === 'ADMIN') {
-      const updated = { ...user, is_email_verified: true, verification_code: null };
-      return NextResponse.json({ user: { id: updated.id, name: updated.name, email: updated.email, orgId: updated.org_id, role: updated.role, status: updated.status, isEmailVerified: true } });
+    // create a session token now that the user is verified
+    let token: string;
+    try {
+      token = typeof randomUUID === 'function' ? randomUUID() : Math.random().toString(36).slice(2);
+    } catch {
+      token = Math.random().toString(36).slice(2);
+    }
+    const { error: sessErr } = await supabase.from('sessions').insert({ id: token, user_id: user.id });
+    if (sessErr) {
+      console.error('Session insert error:', sessErr);
+      return NextResponse.json({ error: 'Session creation failed' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    const updated = { ...user, is_email_verified: true, verification_code: null };
+    const res = NextResponse.json({ user: { id: updated.id, name: updated.name, email: updated.email, orgId: updated.org_id, role: updated.role, status: updated.status, isEmailVerified: true } });
+    res.cookies.set('wf_session', token, { httpOnly: true, path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+    return res;
   } catch (err) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }

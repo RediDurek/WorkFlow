@@ -26,7 +26,7 @@ const App: React.FC = () => {
 
     const initUser = async () => {
       try {
-        const resp = await fetch('/api/auth/session');
+        const resp = await fetch('/api/auth/session', { credentials: 'include' });
         const data = await resp.json();
         if (resp.ok && data.user) setUser(data.user);
       } catch (err) {
@@ -40,7 +40,7 @@ const App: React.FC = () => {
   const handleLogout = () => {
     (async () => {
       try {
-        await fetch('/api/auth/logout', { method: 'POST' });
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       } catch (err) { console.error('Logout error', err); }
       setUser(null);
       setActiveTab('dashboard');
@@ -49,7 +49,7 @@ const App: React.FC = () => {
 
   const refreshUser = async () => {
       try {
-        const resp = await fetch('/api/auth/session');
+        const resp = await fetch('/api/auth/session', { credentials: 'include' });
         const data = await resp.json();
         if (resp.ok && data.user) setUser(data.user);
       } catch (err) {

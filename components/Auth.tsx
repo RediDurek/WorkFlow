@@ -59,12 +59,17 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
     try {
       let res;
       if (mode === 'REGISTER_ORG') {
-        res = await fetch('/api/auth/registerOrg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orgName, adminName: name, email, password, taxId }) });
+        res = await fetch('/api/auth/registerOrg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ orgName, adminName: name, email, password, taxId }) });
       } else {
-        res = await fetch('/api/auth/joinOrg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orgCode: orgCode.toUpperCase(), name, email, password, taxId, contractType, contractEndDate }) });
+        res = await fetch('/api/auth/joinOrg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ orgCode: orgCode.toUpperCase(), name, email, password, taxId, contractType, contractEndDate }) });
       }
       const data = await res.json();
       if (res.ok && data.success) {
+        // if server returned an authenticated user (session created), log them in immediately
+        if (data.user) {
+          onLogin(data.user);
+          return; // exit early
+        }
         setMode('VERIFY_EMAIL');
         setDemoCode(data.demoCode || '');
         setSuccessMessage(t.verifyDesc);
@@ -78,7 +83,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
     e.preventDefault();
     setError(''); setIsLoading(true);
     try {
-      const resp = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      const resp = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email, password }) });
       const json = await resp.json();
       if (resp.ok && json.user) {
         onLogin(json.user);
@@ -86,7 +91,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
         const err = json.error || t.genericError;
         if (err.includes('verified') || err.toLowerCase().includes('email not verified') || err.toLowerCase().includes('verificat')) {
           setMode('VERIFY_EMAIL');
-          const r = await fetch('/api/auth/resendCode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+          const r = await fetch('/api/auth/resendCode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email }) });
           const d = await r.json();
           if (r.ok && d.code) setDemoCode(d.code);
           else setError(err);
@@ -100,7 +105,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setSuccessMessage(''); setIsLoading(true);
     try {
-      const resp = await fetch('/api/auth/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code: verificationCode }) });
+      const resp = await fetch('/api/auth/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email, code: verificationCode }) });
       const data = await resp.json();
       if (resp.ok && data.user) {
         onLogin(data.user);
@@ -112,7 +117,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
   const handleInitiateReset = async (e: React.FormEvent) => {
       e.preventDefault(); setError(''); setIsLoading(true);
       try {
-        const resp = await fetch('/api/auth/reset/initiate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+          const resp = await fetch('/api/auth/reset/initiate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email }) });
         const data = await resp.json();
         if (resp.ok && data.success && data.demoCode) {
           setDemoCode(data.demoCode);
@@ -126,7 +131,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
       e.preventDefault(); setError(''); setIsLoading(true);
       if (newPassword.length < 6) { setError(t.passShort); setIsLoading(false); return; }
       try {
-        const resp = await fetch('/api/auth/reset/complete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code: verificationCode, newPass: newPassword }) });
+        const resp = await fetch('/api/auth/reset/complete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email, code: verificationCode, newPass: newPassword }) });
         const data = await resp.json();
         if (resp.ok && data.success) {
           alert(t.resetSuccess);

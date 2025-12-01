@@ -3,7 +3,8 @@
 import { TimeLog, LeaveRequest, User, Organization, UserStatus, Language } from '../types';
 
 const fetchJson = async <T = any>(url: string, options?: RequestInit): Promise<T> => {
-  const res = await fetch(url, options);
+  const merged = { credentials: 'include' as RequestCredentials, ...options } as RequestInit;
+  const res = await fetch(url, merged);
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
     try {
