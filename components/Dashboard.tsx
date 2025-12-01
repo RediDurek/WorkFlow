@@ -111,8 +111,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
     };
   };
 
-  const refreshData = useCallback(() => {
-    const org = StorageService.getOrganization(user.orgId);
+  const refreshData = useCallback(async () => {
+    const org = await StorageService.getOrganization(user.orgId);
     setOrgDetails(org);
 
     if (org && user.role === 'ADMIN') {
@@ -137,7 +137,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
     }
 
     if (user.role === 'EMPLOYEE') {
-        const logs = StorageService.getLogs(user.id);
+        const logs = await StorageService.getLogs(user.id);
         const last = logs.length > 0 ? logs[logs.length - 1] : undefined;
         setLastLog(last);
         const todayStr = new Date().toISOString().split('T')[0];
@@ -148,11 +148,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
         else setStatus(WorkStatus.IDLE);
     } else {
         if (org) { setOrgCode(org.code); setOrgName(org.name); }
-        const allUsers = StorageService.getOrgEmployees(user.orgId);
+        const allUsers = await StorageService.getOrgEmployees(user.orgId);
         const activeEmployees = allUsers.filter(u => u.status === 'ACTIVE');
         const pending = allUsers.filter(u => u.status === 'PENDING_APPROVAL');
         setPendingUsers(pending);
-        const allLogs = StorageService.getLogs(undefined, user.orgId);
+        const allLogs = await StorageService.getLogs(undefined, user.orgId);
         
         // Use exportMonth/Year to filter stats
         const stats: UserStats[] = activeEmployees.map(emp => {

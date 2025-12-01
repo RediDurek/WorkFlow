@@ -1,9 +1,9 @@
 
-import { GoogleGenAI } from "@google/genai";
+// import { GoogleGenAI } from "@google/genai";
 import { Language } from "../types";
 
 // Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
  * Rewrites a casual reason into a professional one in the specified language.
@@ -35,12 +35,13 @@ export const polishLeaveReason = async (rawText: string, language: Language): Pr
       Input text: "${rawText}"
     `;
 
-    const response = await ai.models.generateContent({
-      model: model,
-      contents: prompt,
-    });
+    // const response = await ai.models.generateContent({
+    //   model: model,
+    //   contents: prompt,
+    // });
 
-    const text = response.text;
+    // const text = response.text;
+    const text = "Simulated polished text from Gemini API."; // Placeholder for actual API response
     return text ? text.trim() : rawText;
   } catch (error) {
     console.error("Gemini API Error:", error);

@@ -27,12 +27,15 @@ export const LeaveRequests: React.FC<LeaveRequestsProps> = ({ user, language }) 
   const [viewAttachment, setViewAttachment] = useState<string | null>(null);
 
   useEffect(() => {
-    const reqs = StorageService.getLeaveRequests(user.role === 'EMPLOYEE' ? user.id : undefined, user.orgId);
-    setRequests(reqs.reverse());
+    const loadRequests = async () => {
+      const reqs = await StorageService.getLeaveRequests(user.role === 'EMPLOYEE' ? user.id : undefined, user.orgId);
+      setRequests(reqs.reverse());
+    };
+    loadRequests();
   }, [user]);
 
   const handlePolish = async () => {
-    const org = StorageService.getOrganization(user.orgId);
+    const org = await StorageService.getOrganization(user.orgId);
     if (!org?.isPro || org?.subscriptionStatus === 'EXPIRED') {
          setShowSubscriptionModal(true);
          return;
