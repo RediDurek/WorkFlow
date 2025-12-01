@@ -11,9 +11,22 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 const generateAuthCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 
+const getSubtleCrypto = async (): Promise<SubtleCrypto | null> => {
+  if (typeof window !== 'undefined' && window.crypto?.subtle) return window.crypto.subtle;
+  if (typeof globalThis !== 'undefined' && (globalThis as any).crypto?.subtle) return (globalThis as any).crypto.subtle;
+  try {
+    const { webcrypto } = await import('crypto');
+    return webcrypto.subtle;
+  } catch {
+    return null;
+  }
+};
+
 const hashPassword = async (pass: string) => {
+  const subtle = await getSubtleCrypto();
+  if (!subtle) throw new Error('WebCrypto non disponibile');
   const msgBuffer = new TextEncoder().encode(pass);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashBuffer = await subtle.digest('SHA-256', msgBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
