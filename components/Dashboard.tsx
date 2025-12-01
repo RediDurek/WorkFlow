@@ -1,3 +1,4 @@
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Play, Square, Coffee, Briefcase, Users, Building, Copy, Clock, CalendarCheck, MapPin, Loader2, Check, X, UserPlus, ShieldAlert, Download, Crown, Lock, RefreshCw, Trash2, Eye } from 'lucide-react';

@@ -1,3 +1,8 @@
-.env
 node_modules/
-packege-lock.json
+.next/
+.env
+.env.local
+.env.*.local
+package-lock.json
+npm-debug.log*
+.DS_Store

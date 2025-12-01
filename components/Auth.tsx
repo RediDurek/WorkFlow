@@ -1,4 +1,6 @@
 
+'use client';
+
 import React, { useState } from 'react';
 import { User, Language } from '../types';
 import { StorageService } from '../services/storageService';
@@ -201,12 +203,12 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
 
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 relative">
       <div className="absolute top-4 right-4 z-10">
-          <select value={language} onChange={(e) => setLanguage(e.target.value as Language)} className="bg-white border border-gray-200 rounded-lg p-2 text-xl shadow-sm focus:outline-none">
-            <option value="IT">🇮🇹</option>
-            <option value="EN">🇺🇸</option>
-            <option value="ES">🇪🇸</option>
-            <option value="FR">🇫🇷</option>
-            <option value="DE">🇩🇪</option>
+                    <select value={language} onChange={(e) => setLanguage(e.target.value as Language)} className="bg-white border border-gray-200 rounded-lg p-2 text-xl shadow-sm focus:outline-none">
+            <option value="IT">IT</option>
+            <option value="EN">EN</option>
+            <option value="ES">ES</option>
+            <option value="FR">FR</option>
+            <option value="DE">DE</option>
           </select>
       </div>
 

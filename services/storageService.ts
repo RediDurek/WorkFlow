@@ -1,9 +1,11 @@
+'use client';
+
 import { createClient } from '@supabase/supabase-js';
 import { TimeLog, LeaveRequest, User, Organization, LogType, UserStatus, SubscriptionStatus, Language, LeaveType } from '../types';
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Initialize Supabase client (browser-safe, uses anon key only)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -24,7 +26,6 @@ const dbUserToUser = (dbUser: any): User => ({
   email: dbUser.email,
   taxId: dbUser.tax_id,
   role: dbUser.role,
-  password: dbUser.password,
   status: dbUser.status,
   isEmailVerified: dbUser.is_email_verified,
   verificationCode: dbUser.verification_code,
@@ -75,17 +76,22 @@ export const StorageService = {
 
   getSessionUser: async (): Promise<User | null> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return null;
-      
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('workflow_session') : null;
+      if (!raw) return null;
+
+      const stored = JSON.parse(raw) as User;
+
+      // Refresh user data from DB to keep status/flags in sync
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('id', session.user.id)
+        .eq('id', stored.id)
         .single();
-      
-      if (error || !data) return null;
-      return dbUserToUser(data);
+
+      if (error || !data) return stored;
+      const user = dbUserToUser(data);
+      localStorage.setItem('workflow_session', JSON.stringify(user));
+      return user;
     } catch (err) {
       console.error('Error getting session user:', err);
       return null;
@@ -130,7 +136,6 @@ export const StorageService = {
 
   logout: async (): Promise<void> => {
     try {
-      await supabase.auth.signOut();
       localStorage.removeItem('workflow_session');
     } catch (err) {
       console.error('Logout error:', err);

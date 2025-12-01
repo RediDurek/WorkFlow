@@ -1,3 +1,4 @@
+'use client';
 
 import React from 'react';
 import { User, TimeLog, LeaveRequest, Language, LeaveType } from '../types';

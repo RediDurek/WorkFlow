@@ -1,3 +1,4 @@
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Send, Calendar, Plus, X, Check, XCircle, Paperclip, Eye, Image as ImageIcon, ShieldCheck } from 'lucide-react';
