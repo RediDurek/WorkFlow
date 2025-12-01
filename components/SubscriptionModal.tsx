@@ -25,7 +25,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const success = await StorageService.linkPaymentMethod(orgId);
+    const success = await StorageService.linkPaymentMethod();
     setLoading(false);
     if (success) {
       onSuccess();

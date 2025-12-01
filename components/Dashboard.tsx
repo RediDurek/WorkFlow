@@ -75,9 +75,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
 
   const handleTutorialComplete = async () => {
       setShowTutorial(false);
-      await StorageService.completeTutorial(user.id);
-      refreshUser();
-  };
+       await StorageService.completeTutorial();
+       refreshUser();
+   };
 
   const calculateUserStats = (user: User, logs: TimeLog[], month: number, year: number): UserStats => {
     const userId = user.id;
@@ -220,7 +220,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
 
   const handleRegenerateCode = async () => {
       setRegeneratingCode(true);
-      const newCode = await StorageService.regenerateOrgCode(user.orgId);
+      const newCode = await StorageService.regenerateOrgCode();
       if (newCode) {
           setOrgCode(newCode);
           alert(t.codeRegenerated);

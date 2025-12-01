@@ -25,14 +25,17 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
   const [exportYear, setExportYear] = useState<number>(new Date().getFullYear());
 
   useEffect(() => {
-    if (user.role === 'ADMIN') {
-        const o = StorageService.getOrganization(user.orgId);
+    const loadOrg = async () => {
+      if (user.role === 'ADMIN') {
+        const o = await StorageService.getOrganization(user.orgId);
         setOrg(o);
-    }
+      }
+    };
+    loadOrg();
   }, [user]);
 
-  const handleExport = () => {
-    const csvContent = StorageService.exportDataAsCSV(user.role === 'EMPLOYEE' ? user.id : undefined, user.orgId, exportMonth, exportYear, language);
+  const handleExport = async () => {
+    const csvContent = await StorageService.exportDataAsCSV(user.role === 'EMPLOYEE' ? user.id : undefined, user.orgId, exportMonth, exportYear, language);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -49,14 +52,14 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
   const handleDeleteAccount = async () => {
       if(confirm('ARE YOU SURE? Irreversible.')) {
           setIsDeleting(true);
-          await StorageService.deleteAccount(user.id);
+          await StorageService.deleteAccount();
           onLogout();
       }
   };
 
   const handleCancelRenew = async () => {
       if(confirm('Confermi disdetta rinnovo?')) {
-          await StorageService.cancelAutoRenew(user.orgId);
+          await StorageService.cancelAutoRenew();
           setOrg(prev => prev ? {...prev, autoRenew: false} : undefined);
           alert(t.cancelSuccess);
       }
