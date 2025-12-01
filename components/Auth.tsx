@@ -52,7 +52,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) { setError(t.passShort); return; }
-    if(!privacyAccepted) { setError(language === 'IT' ? "Devi accettare Termini e Privacy." : "Accept Terms required."); return; }
+    if(!privacyAccepted) { setError(t.acceptTermsRequired); return; }
     setError(''); setIsLoading(true);
     try {
       let res;
@@ -67,9 +67,9 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
         setDemoCode(data.demoCode || '');
         setSuccessMessage(t.verifyDesc);
       } else {
-        setError(data.error || 'Error');
+        setError(data.error || t.genericError);
       }
-    } catch (err) { setError('Error'); } finally { setIsLoading(false); }
+    } catch (err) { setError(t.genericError); } finally { setIsLoading(false); }
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -81,7 +81,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
       if (resp.ok && json.user) {
         onLogin(json.user);
       } else {
-        const err = json.error || 'Error';
+        const err = json.error || t.genericError;
         if (err.includes('verified') || err.toLowerCase().includes('email not verified') || err.toLowerCase().includes('verificat')) {
           setMode('VERIFY_EMAIL');
           const r = await fetch('/api/auth/resendCode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
@@ -92,7 +92,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
           setError(err);
         }
       }
-    } catch (err) { setError('Error'); } finally { setIsLoading(false); }
+    } catch (err) { setError(t.genericError); } finally { setIsLoading(false); }
   };
 
   const handleVerificationSubmit = async (e: React.FormEvent) => {
@@ -103,8 +103,8 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
       if (resp.ok && data.user) {
         onLogin(data.user);
       } else if (data.error && data.error.includes('Attendi')) { setMode('LOGIN'); setSuccessMessage(data.error); resetForm(); setEmail(email); }
-      else setError(data.error || 'Invalid code');
-    } catch (err) { setError('Error'); } finally { setIsLoading(false); }
+      else setError(data.error || t.invalidCode);
+    } catch (err) { setError(t.genericError); } finally { setIsLoading(false); }
   };
 
   const handleInitiateReset = async (e: React.FormEvent) => {
@@ -115,9 +115,9 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
         if (resp.ok && data.success && data.demoCode) {
           setDemoCode(data.demoCode);
         } else {
-          setError(data.error || 'Error');
+          setError(data.error || t.genericError);
         }
-      } catch (err) { setError('Error'); } finally { setIsLoading(false); }
+      } catch (err) { setError(t.genericError); } finally { setIsLoading(false); }
   };
 
   const handleCompleteReset = async (e: React.FormEvent) => {
@@ -131,9 +131,9 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
           resetForm();
           setMode('LOGIN');
         } else {
-          setError(data.error || 'Error');
+          setError(data.error || t.genericError);
         }
-      } catch(err) { setError('Error'); } finally { setIsLoading(false); }
+      } catch(err) { setError(t.genericError); } finally { setIsLoading(false); }
   };
 
   if (mode === 'VERIFY_EMAIL') {
@@ -154,7 +154,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
                 <input type="text" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-center text-2xl tracking-[0.5em] font-bold" placeholder="000000" maxLength={6} required />
                 <button type="submit" disabled={isLoading} className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-lg">{isLoading ? '...' : t.verifyBtn}</button>
             </form>
-            <div className="mt-6 flex justify-between items-center text-sm"><button onClick={() => { setMode('LOGIN'); resetForm(); }} className="text-gray-400 hover:text-gray-600 flex items-center gap-1"><ArrowLeft size={14} /> Back</button></div>
+            <div className="mt-6 flex justify-between items-center text-sm"><button onClick={() => { setMode('LOGIN'); resetForm(); }} className="text-gray-400 hover:text-gray-600 flex items-center gap-1"><ArrowLeft size={14} /> {t.backToLogin}</button></div>
         </div>
       </div>
     );
