@@ -92,8 +92,13 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
         if (adjDate.getFullYear() === selectedYear && adjDate.getMonth() === selectedMonth) {
           const startTs = parseTime(a.date, a.clockInNew || a.clockIn);
           const endTs = parseTime(a.date, a.clockOutNew || a.clockOut);
+          const pauseStartTs = parseTime(a.date, a.pauseStartNew || a.pauseStart);
+          const pauseEndTs = parseTime(a.date, a.pauseEndNew || a.pauseEnd);
           if (startTs !== null && endTs !== null && endTs > startTs) {
-            const duration = endTs - startTs;
+            let duration = endTs - startTs;
+            if (pauseStartTs !== null && pauseEndTs !== null && pauseEndTs > pauseStartTs && pauseStartTs > startTs && pauseEndTs < endTs) {
+              duration -= (pauseEndTs - pauseStartTs);
+            }
             dayHours.set(a.date, duration);
           }
         }
