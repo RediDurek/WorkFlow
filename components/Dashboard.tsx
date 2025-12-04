@@ -86,6 +86,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
 
   const calculateUserStats = (user: User, logs: TimeLog[], adjustments: any[], month: number, year: number): UserStats => {
     const userId = user.id;
+    const startOfMonth = new Date(year, month, 1).getTime();
+    const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999).getTime();
     // 1. Get ALL logs for current status (Last log check needs history)
     let allUserLogs = logs.filter(l => l.userId === userId).sort((a,b) => a.timestamp - b.timestamp);
     // Apply approved adjustments: replace logs of that day with corrected clock-in/out and pause
@@ -176,9 +178,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
         }
     });
 
-    if (currentStatus === WorkStatus.WORKING && startTime > 0 && startTime >= startOfMonth && startTime <= endOfMonth) {
-         totalMs += (Date.now() - startTime);
-    }
+    // if (currentStatus === WorkStatus.WORKING && startTime > 0 && startTime >= startOfMonth && startTime <= endOfMonth) {
+    //      totalMs += (Date.now() - startTime);
+    // }
+
+    if (currentStatus === WorkStatus.WORKING && startTime > 0) {
+      totalMs += (Date.now() - startTime);
+    } 
     
     return {
         userId, userName: user.name, taxId: user.taxId, currentStatus, lastActive: last ? last.timestamp : 0,
