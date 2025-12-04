@@ -5,6 +5,8 @@ import { User, TimeLog, LeaveRequest, Language, LeaveType, TimeAdjustment } from
 import { translations } from '../constants/translations';
 import { X, Calendar, Clock, AlertCircle, Mail, User as UserIcon, Download } from 'lucide-react';
 import { StorageService } from '../services/storageService';
+import { buildDayAggregates, mergeLogsWithAdjustments } from '../lib/timeUtils';
+import { formatDate, formatHours } from '../lib/format';
 
 interface EmployeeDetailModalProps {
   user: User;
@@ -23,10 +25,7 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
   const t = translations[language];
   if (!isOpen) return null;
 
-  const formatDate = (timestamp: number) => {
-      const locale = language === 'EN' ? 'en-US' : language.toLowerCase();
-      return new Date(timestamp).toLocaleDateString(locale);
-  };
+  const locale = language === 'EN' ? 'en-US' : language.toLowerCase();
 
   const [contractType, setContractType] = useState<'DETERMINATO' | 'INDETERMINATO'>(user.contractType || 'INDETERMINATO');
   const [contractEnd, setContractEnd] = useState<string>(user.contractEndDate || '');
@@ -49,63 +48,17 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
 
   // --- Hours aggregation (no raw logs shown) ---
   const timeAggregation = useMemo(() => {
-    const monthLogs = logs
+    const mergedLogs = mergeLogsWithAdjustments(logs, adjustments || []);
+    const monthLogs = mergedLogs
       .filter(l => {
         const d = new Date(l.dateString);
         return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
       })
       .sort((a, b) => a.timestamp - b.timestamp);
 
-    const dayHours = new Map<string, number>();
-    let open: number | null = null;
-    let openDate = '';
-    const close = (endTs: number) => {
-      if (open !== null && openDate) {
-        const prev = dayHours.get(openDate) || 0;
-        dayHours.set(openDate, prev + (endTs - open));
-        open = null; openDate = '';
-      }
-    };
-
-    monthLogs.forEach(l => {
-      const dk = new Date(l.timestamp).toISOString().split('T')[0];
-      if (l.type === 'CLOCK_IN' || l.type === 'END_BREAK') { open = l.timestamp; openDate = dk; }
-      if ((l.type === 'START_BREAK' || l.type === 'CLOCK_OUT') && open !== null) { close(l.timestamp); }
-    });
-    if (open !== null && openDate) {
-      const endOfDay = new Date(`${openDate}T23:59:59`).getTime();
-      close(endOfDay);
-    }
-
-    // apply approved adjustments overrides
-    const parseTime = (dateStr: string, timeStr?: string) => {
-      if (!timeStr) return null;
-      const normalized = timeStr.includes(':') ? timeStr.slice(0,5) : timeStr;
-      const d = new Date(`${dateStr}T${normalized}`);
-      return isNaN(d.getTime()) ? null : d.getTime();
-    };
-
-    adjustments
-      .filter(a => a.status === 'APPROVED')
-      .forEach(a => {
-        const adjDate = new Date(a.date);
-        if (adjDate.getFullYear() === selectedYear && adjDate.getMonth() === selectedMonth) {
-          const startTs = parseTime(a.date, a.clockInNew || a.clockIn);
-          const endTs = parseTime(a.date, a.clockOutNew || a.clockOut);
-          const pauseStartTs = parseTime(a.date, a.pauseStartNew || a.pauseStart);
-          const pauseEndTs = parseTime(a.date, a.pauseEndNew || a.pauseEnd);
-          if (startTs !== null && endTs !== null && endTs > startTs) {
-            let duration = endTs - startTs;
-            if (pauseStartTs !== null && pauseEndTs !== null && pauseEndTs > pauseStartTs && pauseStartTs > startTs && pauseEndTs < endTs) {
-              duration -= (pauseEndTs - pauseStartTs);
-            }
-            dayHours.set(a.date, duration);
-          }
-        }
-      });
-
-    const days = Array.from(dayHours.entries())
-      .map(([dateKey, ms]) => ({ dateKey, ms, day: new Date(dateKey).getDate() }))
+    const dayMap = buildDayAggregates(monthLogs);
+    const days = Array.from(dayMap.entries())
+      .map(([dateKey, entry]) => ({ dateKey, ms: entry.totalMs, day: new Date(dateKey).getDate() }))
       .sort((a, b) => a.day - b.day);
 
     const weeksMap = new Map<number, { label: string; ms: number; days: typeof days }>();
@@ -129,7 +82,7 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
       monthTotal,
       activeWeek
     };
-  }, [logs, selectedMonth, selectedYear, selectedWeek]);
+  }, [logs, adjustments, selectedMonth, selectedYear, selectedWeek]);
 
   useEffect(() => {
     setSelectedWeek(0);
@@ -153,10 +106,9 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
     document.body.removeChild(link);
   };
 
-  const formatHours = (ms: number) => (ms / (1000 * 60 * 60)).toFixed(2);
   const formatDayLabel = (dateKey: string) => {
     const d = new Date(dateKey);
-    return d.toLocaleDateString(language === 'EN' ? 'en-US' : language.toLowerCase(), { weekday: 'short', day: '2-digit', month: '2-digit' });
+    return d.toLocaleDateString(locale, { weekday: 'short', day: '2-digit', month: '2-digit' });
   };
   
   return (

@@ -6,6 +6,7 @@ import { StorageService } from '../services/storageService';
 import { Download, Trash2, Shield, User as UserIcon, Building, LogOut, CreditCard, HelpCircle } from 'lucide-react';
 import { translations } from '../constants/translations';
 import { OnboardingTutorial } from './OnboardingTutorial';
+import { formatDate } from '../lib/format';
 
 interface ProfileProps {
   user: User;
@@ -16,6 +17,7 @@ interface ProfileProps {
 
 export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setLanguage }) => {
   const t = translations[language];
+  const locale = language === 'EN' ? 'en-US' : language.toLowerCase();
   const [isDeleting, setIsDeleting] = useState(false);
   const [org, setOrg] = useState<Organization | undefined>(undefined);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -45,7 +47,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
       const days = Math.ceil((new Date(user.contractEndDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
       if (days <= 30) badge = 'bg-red-100 text-red-700';
       else badge = 'bg-yellow-100 text-yellow-800';
-      label += ` (scade ${new Date(user.contractEndDate).toLocaleDateString(language === 'EN' ? 'en-US' : language.toLowerCase())})`;
+      label += ` (scade ${formatDate(user.contractEndDate, locale)})`;
     }
     setContractInfo({ type, badge, label });
   }, [user]);
@@ -79,11 +81,6 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
           setOrg(prev => prev ? {...prev, autoRenew: false} : undefined);
           alert(t.cancelSuccess);
       }
-  };
-
-  const formatDate = (timestamp: number) => {
-      const locale = language === 'EN' ? 'en-US' : language.toLowerCase();
-      return new Date(timestamp).toLocaleDateString(locale);
   };
 
   return (
@@ -141,7 +138,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
                   </div>
                   <div className="flex justify-between text-sm">
                       <span className="text-gray-500">{org.autoRenew ? t.renewsOn : t.expiresOn}:</span>
-                      <span className="font-mono">{formatDate(org.subscriptionStatus === 'TRIAL' ? org.trialEndsAt : Date.now() + 30*24*60*60*1000)}</span>
+                      <span className="font-mono">{formatDate(org.subscriptionStatus === 'TRIAL' ? org.trialEndsAt : Date.now() + 30*24*60*60*1000, locale)}</span>
                   </div>
               </div>
 

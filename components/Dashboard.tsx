@@ -8,6 +8,7 @@ import { SubscriptionModal } from './SubscriptionModal';
 import { OnboardingTutorial } from './OnboardingTutorial';
 import { EmployeeDetailModal } from './EmployeeDetailModal';
 import { translations } from '../constants/translations';
+import { buildDayAggregates, mergeLogsWithAdjustments } from '../lib/timeUtils';
 
 // Fallback UUID generator for environments where crypto.randomUUID is not available
 const generateUUID = (): string => {
@@ -86,64 +87,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
 
   const calculateUserStats = (user: User, logs: TimeLog[], adjustments: any[], month: number, year: number): UserStats => {
     const userId = user.id;
-    const startOfMonth = new Date(year, month, 1).getTime();
-    const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999).getTime();
-    // 1. Get ALL logs for current status (Last log check needs history)
-    let allUserLogs = logs.filter(l => l.userId === userId).sort((a,b) => a.timestamp - b.timestamp);
-    // Apply approved adjustments: replace logs of that day with corrected clock-in/out and pause
-    const approvedAdj = adjustments.filter((a: any) => a.userId === userId && a.status === 'APPROVED');
-    const parseTime = (dateStr: string, timeStr?: string) => {
-      if (!timeStr) return null;
-      const normalized = timeStr.includes(':') ? timeStr.slice(0,5) : timeStr;
-      const d = new Date(`${dateStr}T${normalized}`);
-      const ts = d.getTime();
-      return isNaN(ts) ? null : ts;
-    };
-    approvedAdj.forEach((adj: any) => {
-      const startTs = parseTime(adj.date, adj.clockInNew || adj.clockIn);
-      const endTs = parseTime(adj.date, adj.clockOutNew || adj.clockOut);
-      const pauseStartTs = parseTime(adj.date, adj.pauseStartNew || adj.pauseStart);
-      const pauseEndTs = parseTime(adj.date, adj.pauseEndNew || adj.pauseEnd);
-      const d = new Date(adj.date);
-      if (d.getFullYear() === year && d.getMonth() === month && startTs !== null && endTs !== null && endTs > startTs) {
-        allUserLogs = allUserLogs.filter(l => l.dateString !== adj.date);
-        allUserLogs.push({
-          id: `adj-${adj.id}-in`,
-          userId,
-          orgId: user.orgId,
-          timestamp: startTs,
-          type: LogType.CLOCK_IN,
-          dateString: adj.date
-        });
-        if (pauseStartTs !== null && pauseEndTs !== null && pauseEndTs > pauseStartTs && pauseStartTs > startTs && pauseEndTs < endTs) {
-          allUserLogs.push({
-            id: `adj-${adj.id}-pstart`,
-            userId,
-            orgId: user.orgId,
-            timestamp: pauseStartTs,
-            type: LogType.START_BREAK,
-            dateString: adj.date
-          });
-          allUserLogs.push({
-            id: `adj-${adj.id}-pend`,
-            userId,
-            orgId: user.orgId,
-            timestamp: pauseEndTs,
-            type: LogType.END_BREAK,
-            dateString: adj.date
-          });
-        }
-        allUserLogs.push({
-          id: `adj-${adj.id}-out`,
-          userId,
-          orgId: user.orgId,
-          timestamp: endTs,
-          type: LogType.CLOCK_OUT,
-          dateString: adj.date
-        });
-      }
-    });
-    allUserLogs = allUserLogs.sort((a,b) => a.timestamp - b.timestamp);
+    // 1. Get ALL logs for current status (Last log check needs history) and merge approved adjustments
+    const allUserLogs = mergeLogsWithAdjustments(
+      logs.filter(l => l.userId === userId).sort((a,b) => a.timestamp - b.timestamp),
+      adjustments.filter((a: any) => a.userId === userId)
+    );
 
     const last = allUserLogs.length > 0 ? allUserLogs[allUserLogs.length - 1] : undefined;
     let currentStatus = WorkStatus.IDLE;
@@ -164,27 +112,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
       return d.getFullYear() === year && d.getMonth() === month;
     });
 
-    let totalMs = 0;
-    const daysSet = new Set<string>();
-    let startTime = 0;
-
-    monthlyLogs.forEach(log => {
-        daysSet.add(log.dateString);
-        if (log.type === LogType.CLOCK_IN || log.type === LogType.END_BREAK) {
-            startTime = log.timestamp;
-        } else if ((log.type === LogType.CLOCK_OUT || log.type === LogType.START_BREAK) && startTime > 0) {
-            totalMs += (log.timestamp - startTime);
-            startTime = 0;
-        }
-    });
-
-    // if (currentStatus === WorkStatus.WORKING && startTime > 0 && startTime >= startOfMonth && startTime <= endOfMonth) {
-    //      totalMs += (Date.now() - startTime);
-    // }
-
-    if (currentStatus === WorkStatus.WORKING && startTime > 0) {
-      totalMs += (Date.now() - startTime);
-    } 
+    const dayAgg = buildDayAggregates(monthlyLogs);
+    const totalMs = Array.from(dayAgg.values()).reduce((acc, v) => acc + v.totalMs, 0);
+    const daysSet = new Set(dayAgg.keys());
     
     return {
         userId, userName: user.name, taxId: user.taxId, currentStatus, lastActive: last ? last.timestamp : 0,

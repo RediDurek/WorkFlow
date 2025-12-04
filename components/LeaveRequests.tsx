@@ -7,6 +7,7 @@ import { polishLeaveReason } from '../services/geminiService';
 import { LeaveRequest, LeaveType, User, Language } from '../types';
 import { SubscriptionModal } from './SubscriptionModal';
 import { translations } from '../constants/translations';
+import { formatDate } from '../lib/format';
 
 interface LeaveRequestsProps {
   user: User;
@@ -16,6 +17,7 @@ interface LeaveRequestsProps {
 
 export const LeaveRequests: React.FC<LeaveRequestsProps> = ({ user, language, refreshNotifications }) => {
   const t = translations[language];
+  const locale = language === 'EN' ? 'en-US' : language.toLowerCase();
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [startDate, setStartDate] = useState('');
@@ -197,7 +199,7 @@ export const LeaveRequests: React.FC<LeaveRequestsProps> = ({ user, language, re
                   </div>
                 </div>
               </div>
-              <div className="text-sm font-medium text-gray-900 mb-2">{formatDate(req.startDate)} - {formatDate(req.endDate)}</div>
+              <div className="text-sm font-medium text-gray-900 mb-2">{formatDate(req.startDate, locale)} - {formatDate(req.endDate, locale)}</div>
               <p className="text-sm text-gray-500 italic bg-gray-50 p-3 rounded-lg border border-gray-100 mb-4 flex-grow">"{req.reason}"</p>
               
               {req.attachment && (

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Language, TimeAdjustment, TimeLog, User } from '../types';
+import { computeNetHours } from '../lib/timeUtils';
 import { StorageService } from '../services/storageService';
 import { translations } from '../constants/translations';
 import { Plus, Send, Check, X, AlertTriangle, ClipboardList } from 'lucide-react';
@@ -27,23 +28,7 @@ export const Adjustments: React.FC<AdjustmentsProps> = ({ user, language, refres
   const [loading, setLoading] = useState(false);
   const [logs, setLogs] = useState<TimeLog[]>([]);
   const formatTime = (v?: string) => v && v.length >= 4 ? v : '-';
-  const getNetHours = (cin?: string, cout?: string, ps?: string, pe?: string) => {
-    if (!cin || !cout) return null;
-    const toTs = (t?: string) => {
-      if (!t) return null;
-      const norm = t.includes(':') ? t.slice(0,5) : t;
-      const d = new Date(`1970-01-01T${norm}:00Z`);
-      return isNaN(d.getTime()) ? null : d.getTime();
-    };
-    const start = toTs(cin);
-    const end = toTs(cout);
-    const psTs = toTs(ps);
-    const peTs = toTs(pe);
-    if (start === null || end === null || end <= start) return null;
-    let diff = end - start;
-    if (psTs !== null && peTs !== null && peTs > psTs) diff -= (peTs - psTs);
-    return diff / (1000 * 60 * 60);
-  };
+  const getNetHours = (day: string, cin?: string, cout?: string, ps?: string, pe?: string) => computeNetHours(day, cin, cout, ps, pe);
   const availableDays = Array.from(new Set(logs.map(l => l.dateString))).sort().reverse();
   const getDaySummary = (day: string) => {
     const dayLogs = logs.filter(l => l.dateString === day).sort((a, b) => a.timestamp - b.timestamp);
@@ -183,7 +168,7 @@ export const Adjustments: React.FC<AdjustmentsProps> = ({ user, language, refres
                     <div className="text-[11px] text-gray-400">Pausa: nessuna</div>
                   )}
                   <div className="text-[11px] text-gray-500">Netto proposto: {(() => {
-                    const h = getNetHours(a.clockInNew || a.clockIn, a.clockOutNew || a.clockOut, a.pauseStartNew || a.pauseStart, a.pauseEndNew || a.pauseEnd);
+                    const h = getNetHours(a.date, a.clockInNew || a.clockIn, a.clockOutNew || a.clockOut, a.pauseStartNew || a.pauseStart, a.pauseEndNew || a.pauseEnd);
                     return h !== null ? `${h.toFixed(2)} h` : 'n/d';
                   })()}</div>
                   <div className="text-xs text-gray-600 mt-1">Motivo: {a.reason}</div>
@@ -220,7 +205,7 @@ export const Adjustments: React.FC<AdjustmentsProps> = ({ user, language, refres
                     <div className="text-[11px] text-gray-400">Pausa: nessuna</div>
                   )}
                   <div className="text-[11px] text-gray-500">Netto approvato: {(() => {
-                    const h = getNetHours(a.clockInNew || a.clockIn, a.clockOutNew || a.clockOut, a.pauseStartNew || a.pauseStart, a.pauseEndNew || a.pauseEnd);
+                    const h = getNetHours(a.date, a.clockInNew || a.clockIn, a.clockOutNew || a.clockOut, a.pauseStartNew || a.pauseStart, a.pauseEndNew || a.pauseEnd);
                     return h !== null ? `${h.toFixed(2)} h` : 'n/d';
                   })()}</div>
                   <div className="text-xs text-gray-600 mt-1">Motivo: {a.reason}</div>

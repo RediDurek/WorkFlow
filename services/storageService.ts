@@ -1,6 +1,8 @@
 'use client';
 
 import { TimeLog, LeaveRequest, User, Organization, UserStatus, Language, NotificationItem, TimeAdjustment } from '../types';
+import { buildDayAggregates, mergeLogsWithAdjustments, parseTimeOnDate } from '../lib/timeUtils';
+import { formatDateShort, formatHours } from '../lib/format';
 
 const fetchJson = async <T = any>(url: string, options?: RequestInit): Promise<T> => {
   const merged = { credentials: 'include' as RequestCredentials, ...options } as RequestInit;
@@ -269,66 +271,12 @@ export const StorageService = {
     const logs = await StorageService.getLogs(userId, orgId);
     const adjustments = await StorageService.getAdjustments(userId);
     const approvedAdjustments = adjustments.filter(a => a.status === 'APPROVED');
-    const parseTime = (dateStr: string, timeStr?: string) => {
-      if (!timeStr) return null;
-      const normalized = timeStr.includes(':') ? timeStr.slice(0, 5) : timeStr;
-      const d = new Date(`${dateStr}T${normalized}`);
-      const ts = d.getTime();
-      return isNaN(ts) ? null : ts;
-    };
 
     // apply approved adjustments: replace logs for that user/day with corrected in/out
-    let mergedLogs = [...logs];
-    approvedAdjustments.forEach(adj => {
-      const startTs = parseTime(adj.date, adj.clockInNew || adj.clockIn);
-      const endTs = parseTime(adj.date, adj.clockOutNew || adj.clockOut);
-      const pauseStartTs = parseTime(adj.date, adj.pauseStartNew || adj.pauseStart);
-      const pauseEndTs = parseTime(adj.date, adj.pauseEndNew || adj.pauseEnd);
-      if (startTs !== null && endTs !== null && endTs > startTs) {
-        mergedLogs = mergedLogs.filter(l => !(l.userId === adj.userId && l.dateString === adj.date));
-        mergedLogs.push({
-          id: `adj-${adj.id}-in`,
-          userId: adj.userId,
-          orgId: adj.orgId,
-          timestamp: startTs,
-          type: 'CLOCK_IN',
-          dateString: adj.date
-        } as any);
-        if (pauseStartTs !== null && pauseEndTs !== null && pauseEndTs > pauseStartTs && pauseStartTs > startTs && pauseEndTs < endTs) {
-          mergedLogs.push({
-            id: `adj-${adj.id}-pstart`,
-            userId: adj.userId,
-            orgId: adj.orgId,
-            timestamp: pauseStartTs,
-            type: 'START_BREAK',
-            dateString: adj.date
-          } as any);
-          mergedLogs.push({
-            id: `adj-${adj.id}-pend`,
-            userId: adj.userId,
-            orgId: adj.orgId,
-            timestamp: pauseEndTs,
-            type: 'END_BREAK',
-            dateString: adj.date
-          } as any);
-        }
-        mergedLogs.push({
-          id: `adj-${adj.id}-out`,
-          userId: adj.userId,
-          orgId: adj.orgId,
-          timestamp: endTs,
-          type: 'CLOCK_OUT',
-          dateString: adj.date
-        } as any);
-      }
-    });
+    const mergedLogs = mergeLogsWithAdjustments(logs, approvedAdjustments as any);
 
     const locale = language === 'EN' ? 'en-US' : language.toLowerCase();
     const formatTime = (ts: number) => new Date(ts).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
-    const formatDate = (dateStr: string) => {
-      const d = new Date(dateStr);
-      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-    };
 
     // filter by month/year using dateString to avoid TZ drift between months
     let filteredLogs = mergedLogs;
@@ -339,49 +287,17 @@ export const StorageService = {
       });
     }
 
-    // group by user/day
+    // group by user/day using shared aggregators
     type Segment = { start: number; end: number };
     type DaySummary = { dateKey: string; dateLabel: string; segments: Segment[]; totalMs: number; description: string };
     type UserSummary = { userId: string; days: DaySummary[]; totalMs: number };
-    const byUser = new Map<string, Map<string, { totalMs: number; segments: Segment[] }>>();
-
-    filteredLogs.sort((a, b) => a.timestamp - b.timestamp).forEach(log => {
-      const dk = new Date(log.timestamp).toISOString().split('T')[0];
-      if (!byUser.has(log.userId)) byUser.set(log.userId, new Map());
-      if (!byUser.get(log.userId)!.has(dk)) byUser.get(log.userId)!.set(dk, { totalMs: 0, segments: [] });
-    });
-
-    for (const [uid, dayMap] of byUser.entries()) {
-      const userLogs = filteredLogs.filter(l => l.userId === uid).sort((a, b) => a.timestamp - b.timestamp);
-      let open: number | null = null;
-      let openDate = '';
-      const close = (endTs: number) => {
-        if (open !== null && openDate) {
-          const entry = dayMap.get(openDate);
-          if (entry) {
-            entry.totalMs += endTs - open;
-            entry.segments.push({ start: open, end: endTs });
-          }
-          open = null;
-          openDate = '';
-        }
-      };
-      userLogs.forEach(l => {
-        const dk = new Date(l.timestamp).toISOString().split('T')[0];
-        if (l.type === 'CLOCK_IN' || l.type === 'END_BREAK') { open = l.timestamp; openDate = dk; }
-        if ((l.type === 'START_BREAK' || l.type === 'CLOCK_OUT') && open !== null) { close(l.timestamp); }
-      });
-      if (open !== null && openDate) {
-        const endOfDay = new Date(`${openDate}T23:59:59`).getTime();
-        close(endOfDay);
-      }
-    }
 
     const summaries: UserSummary[] = [];
-    for (const [uid, dayMap] of byUser.entries()) {
-      const days: DaySummary[] = Array.from(dayMap.keys()).sort().map(dk => {
-        const entry = dayMap.get(dk)!;
-        // Usa i segmenti già calcolati (netti dalle pause) senza collassare min/max
+    const usersSet = Array.from(new Set(filteredLogs.map(l => l.userId)));
+
+    usersSet.forEach(uid => {
+      const userAgg = buildDayAggregates(filteredLogs.filter(l => l.userId === uid));
+      const days: DaySummary[] = Array.from(userAgg.entries()).sort().map(([dk, entry]) => {
         const desc = entry.segments.length === 0
           ? ''
           : entry.segments.length === 1
@@ -391,7 +307,7 @@ export const StorageService = {
               : entry.segments.map((s, idx) => `turno ${idx + 1}: ${formatTime(s.start)} - ${formatTime(s.end)}`).join(' , ');
         return {
           dateKey: dk,
-          dateLabel: formatDate(dk),
+          dateLabel: formatDateShort(dk, locale),
           segments: entry.segments,
           totalMs: entry.totalMs,
           description: desc
@@ -399,7 +315,7 @@ export const StorageService = {
       });
       const totalMs = days.reduce((acc, d) => acc + d.totalMs, 0);
       summaries.push({ userId: uid, days, totalMs });
-    }
+    });
     return summaries;
   },
 
@@ -407,7 +323,6 @@ export const StorageService = {
     const summaries = await StorageService.getWorkSummary(userId, orgId, month, year, language);
     const monthName = month !== undefined ? new Date(year || new Date().getFullYear(), month).toLocaleString(language === 'EN' ? 'en-US' : language.toLowerCase(), { month: 'long' }) : '';
     const yearLabel = year ?? new Date().getFullYear();
-    const formatHours = (ms: number) => (ms / (1000 * 60 * 60)).toFixed(2);
     const findName = (uid: string) => users?.find(u => u.id === uid)?.name || uid;
     const sortedSummaries = [...summaries].sort((a, b) => findName(a.userId).localeCompare(findName(b.userId)));
 
