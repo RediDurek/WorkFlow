@@ -149,12 +149,12 @@ export const Adjustments: React.FC<AdjustmentsProps> = ({ user, language, refres
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Pausa (inizio) - opzionale</label>
-                <input type="time" value={pauseStart} onChange={e => setPauseStart(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2" />
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Pausa (inizio)</label>
+                <input type="time" value={pauseStart} onChange={e => setPauseStart(e.target.value)} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2" />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Pausa (fine) - opzionale</label>
-                <input type="time" value={pauseEnd} onChange={e => setPauseEnd(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2" />
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Pausa (fine)</label>
+                <input type="time" value={pauseEnd} onChange={e => setPauseEnd(e.target.value)} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2" />
               </div>
             </div>
             <div className="flex gap-2 justify-end">

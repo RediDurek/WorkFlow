@@ -140,7 +140,7 @@ export const StorageService = {
     }));
   },
 
-  createAdjustment: async (payload: { date: string; clockInOld?: string; clockOutOld?: string; clockInNew: string; clockOutNew: string; reason: string }): Promise<void> => {
+  createAdjustment: async (payload: { date: string; clockInOld?: string; clockOutOld?: string; clockInNew: string; clockOutNew: string; pauseStart?: string; pauseEnd?: string; reason: string }): Promise<void> => {
     await fetchJson('/api/adjustments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
