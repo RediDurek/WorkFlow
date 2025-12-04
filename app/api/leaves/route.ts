@@ -49,9 +49,23 @@ export async function POST(req: Request) {
       start_date: request.startDate,
       end_date: request.endDate,
       reason: request.reason || '',
+      attachment: request.attachment || null,
       status: 'PENDING'
     });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+    // notify admins of the org about new leave request
+    const { data: admins } = await supabase.from('users').select('id').eq('org_id', request.orgId).eq('role', 'ADMIN');
+    if (admins && admins.length > 0) {
+      const rows = admins.map(a => ({
+        user_id: a.id,
+        org_id: request.orgId,
+        type: 'LEAVE_REQUEST_CREATED',
+        title: 'Nuova richiesta permessi',
+        body: `${request.userName || 'Dipendente'}: ${request.startDate} - ${request.endDate}`
+      }));
+      await supabase.from('notifications').insert(rows);
+    }
     return NextResponse.json({ success: true });
   } catch (err: any) {
     const status = err?.status || 500;
@@ -68,8 +82,19 @@ export async function PATCH(req: Request) {
     if (!reqId || !status) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
     const supabase = supabaseServer();
-    const { error } = await supabase.from('leave_requests').update({ status }).eq('id', reqId);
+    const { data, error } = await supabase.from('leave_requests').update({ status }).eq('id', reqId).select('user_id, org_id, start_date, end_date').single();
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+    // notify employee about decision
+    if (data?.user_id) {
+      await supabase.from('notifications').insert({
+        user_id: data.user_id,
+        org_id: data.org_id,
+        type: 'LEAVE_REQUEST_UPDATED',
+        title: status === 'APPROVED' ? 'Permesso approvato' : 'Permesso rifiutato',
+        body: `${data.start_date} - ${data.end_date}`
+      });
+    }
     return NextResponse.json({ success: true });
   } catch (err: any) {
     const status = err?.status || 500;

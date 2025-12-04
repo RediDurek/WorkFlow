@@ -56,7 +56,7 @@ export interface Organization {
   taxId?: string; // P.IVA o Codice Fiscale Azienda
 }
 
-export type UserStatus = 'PENDING_APPROVAL' | 'ACTIVE' | 'BLOCKED';
+export type UserStatus = 'PENDING_APPROVAL' | 'PENDING_CONTRACT' | 'ACTIVE' | 'BLOCKED';
 
 export interface User {
   id: string;
@@ -75,6 +75,39 @@ export interface User {
   contractType?: 'DETERMINATO' | 'INDETERMINATO';
   contractEndDate?: string;
   createdAt: number;
+}
+
+export interface NotificationItem {
+  id: string;
+  userId: string;
+  orgId?: string;
+  type: string;
+  title: string;
+  body?: string;
+  readAt?: number | null;
+  createdAt: number;
+}
+
+export interface TimeAdjustment {
+  id: string;
+  orgId: string;
+  userId: string;
+  date: string;
+  clockIn: string; // proposed/current
+  clockOut: string; // proposed/current
+  clockInOld?: string;
+  clockOutOld?: string;
+  clockInNew?: string;
+  clockOutNew?: string;
+  pauseStart?: string;
+  pauseEnd?: string;
+  pauseStartNew?: string;
+  pauseEndNew?: string;
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  approverId?: string;
+  createdAt: number;
+  reviewedAt?: number;
 }
 
 export interface UserStats {

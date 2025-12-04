@@ -34,7 +34,11 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
     };
     loadOrg();
     // compute contract badge
-    const type = user.contractType || 'INDETERMINATO';
+    const type = user.contractType;
+    if (!type) {
+      setContractInfo({ type: 'NONE', badge: 'bg-gray-100 text-gray-700', label: t.contractMissing });
+      return;
+    }
     let badge = 'bg-green-100 text-green-700';
     let label = type === 'INDETERMINATO' ? 'Indeterminato' : 'Determinato';
     if (type === 'DETERMINATO' && user.contractEndDate) {
@@ -47,7 +51,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
   }, [user]);
 
   const handleExport = async () => {
-    const docContent = await StorageService.exportDataAsDoc(user.role === 'EMPLOYEE' ? user.id : undefined, user.orgId, exportMonth, exportYear, language);
+    const docContent = await StorageService.exportDataAsDoc(user.role === 'EMPLOYEE' ? user.id : undefined, user.orgId, exportMonth, exportYear, language, [user]);
     const blob = new Blob([docContent], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

@@ -44,8 +44,6 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [contractType, setContractType] = useState<'DETERMINATO' | 'INDETERMINATO'>('INDETERMINATO');
-  const [contractEndDate, setContractEndDate] = useState('');
 
   const resetForm = () => {
     setError(''); setSuccessMessage(''); setEmail(''); setPassword(''); setName(''); setOrgName(''); setOrgCode(''); setTaxId(''); setVerificationCode(''); setDemoCode(''); setPrivacyAccepted(false); setIsLoading(false); setNewPassword('');
@@ -61,7 +59,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
       if (mode === 'REGISTER_ORG') {
         res = await fetch('/api/auth/registerOrg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ orgName, adminName: name, email, password, taxId }) });
       } else {
-        res = await fetch('/api/auth/joinOrg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ orgCode: orgCode.toUpperCase(), name, email, password, taxId, contractType, contractEndDate }) });
+        res = await fetch('/api/auth/joinOrg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ orgCode: orgCode.toUpperCase(), name, email, password, taxId }) });
       }
       const data = await res.json();
       if (res.ok && data.success) {
@@ -238,24 +236,6 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, language, setLanguage }) =>
             {mode === 'REGISTER_ORG' && <div><label className="block text-xs font-bold text-gray-500 mb-1 ml-1">{t.orgName}</label><input type="text" value={orgName} onChange={(e) => setOrgName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3" required /></div>}
             {mode === 'REGISTER_EMPLOYEE' && <div><label className="block text-xs font-bold text-gray-500 mb-1 ml-1">{t.orgCode}</label><input type="text" value={orgCode} onChange={(e) => setOrgCode(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3" required /></div>}
             {mode !== 'LOGIN' && <div><label className="block text-xs font-bold text-gray-500 mb-1 ml-1">{t.taxId}</label><input type="text" value={taxId} onChange={(e) => setTaxId(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 uppercase" required /></div>}
-            {mode === 'REGISTER_EMPLOYEE' && (
-              <div className="grid grid-cols-1 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">Tipo di contratto</label>
-                  <select value={contractType} onChange={e => setContractType(e.target.value as any)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-                    <option value="INDETERMINATO">Indeterminato</option>
-                    <option value="DETERMINATO">Determinato</option>
-                  </select>
-                </div>
-                {contractType === 'DETERMINATO' && (
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">Data scadenza</label>
-                    <input type="date" value={contractEndDate} onChange={(e) => setContractEndDate(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3" />
-                  </div>
-                )}
-              </div>
-            )}
-            
             <div><label className="block text-xs font-bold text-gray-500 mb-1 ml-1">{t.email}</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3" required /></div>
             <div className="relative">
                 <label className="block text-xs font-bold text-gray-500 mb-1 ml-1">{t.password}</label>

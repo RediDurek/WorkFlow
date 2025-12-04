@@ -11,9 +11,10 @@ import { translations } from '../constants/translations';
 interface LeaveRequestsProps {
   user: User;
   language: Language;
+  refreshNotifications?: () => void;
 }
 
-export const LeaveRequests: React.FC<LeaveRequestsProps> = ({ user, language }) => {
+export const LeaveRequests: React.FC<LeaveRequestsProps> = ({ user, language, refreshNotifications }) => {
   const t = translations[language];
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -93,6 +94,7 @@ export const LeaveRequests: React.FC<LeaveRequestsProps> = ({ user, language }) 
     };
     StorageService.addLeaveRequest(newReq);
     setRequests([newReq, ...requests]);
+    if (refreshNotifications) refreshNotifications();
     setShowForm(false);
     setStartDate(''); setEndDate(''); setReason(''); setType(LeaveType.VACATION); setAttachment(undefined);
   };
@@ -100,6 +102,7 @@ export const LeaveRequests: React.FC<LeaveRequestsProps> = ({ user, language }) 
   const handleAdminAction = (reqId: string, status: 'APPROVED' | 'REJECTED') => {
       StorageService.updateLeaveStatus(reqId, status);
       setRequests(requests.map(r => r.id === reqId ? { ...r, status } : r));
+      if (refreshNotifications) refreshNotifications();
   };
 
   const formatDate = (dateStr: string) => {

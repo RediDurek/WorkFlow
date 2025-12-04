@@ -1,22 +1,24 @@
 'use client';
 
 import React from 'react';
-import { Clock, Calendar, LogOut, UserCircle } from 'lucide-react';
+import { Clock, Calendar, LogOut, UserCircle, Edit3 } from 'lucide-react';
 import { Language } from '../types';
 import { translations } from '../constants/translations';
 
 interface NavbarProps {
-  activeTab: 'dashboard' | 'leave' | 'profile';
-  setActiveTab: (tab: 'dashboard' | 'leave' | 'profile') => void;
+  activeTab: 'dashboard' | 'leave' | 'adjustments' | 'profile';
+  setActiveTab: (tab: 'dashboard' | 'leave' | 'adjustments' | 'profile') => void;
   onLogout: () => void;
   language: Language;
+  leaveUnreadCount: number;
+  adjustmentsPendingCount: number;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogout, language }) => {
+export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogout, language, leaveUnreadCount, adjustmentsPendingCount }) => {
   const t = translations[language];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe px-6 py-3 shadow-lg z-50 flex justify-between items-center md:static md:flex-col md:w-64 md:h-screen md:border-r md:border-t-0 md:justify-start md:space-y-8 md:p-6">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe px-6 py-3 shadow-lg z-50 flex justify-between items-center md:static md:flex-col md:w-64 md:h-screen md:border-r md:border-t-0 md:justify-start md:space-y-8 md:p-6 md:relative">
       
       <div className="hidden md:block text-2xl font-bold text-brand-600 mb-8">
         WorkFlow
@@ -38,8 +40,24 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogou
           activeTab === 'leave' ? 'text-brand-600 bg-brand-50' : 'text-gray-400 hover:text-gray-600'
         }`}
       >
-        <Calendar size={24} />
+        <div className="relative">
+          <Calendar size={24} />
+          {leaveUnreadCount > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full px-1">{leaveUnreadCount}</span>}
+        </div>
         <span className="text-xs md:text-base font-medium mt-1 md:mt-0">{t.navLeaves}</span>
+      </button>
+
+      <button
+        onClick={() => setActiveTab('adjustments')}
+        className={`flex flex-col md:flex-row md:w-full md:space-x-3 items-center justify-center p-2 rounded-xl transition-colors ${
+          activeTab === 'adjustments' ? 'text-brand-600 bg-brand-50' : 'text-gray-400 hover:text-gray-600'
+        }`}
+      >
+        <div className="relative">
+          <Edit3 size={24} />
+          {adjustmentsPendingCount > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full px-1">{adjustmentsPendingCount}</span>}
+        </div>
+        <span className="text-xs md:text-base font-medium mt-1 md:mt-0">Correzioni</span>
       </button>
 
       <button
@@ -51,7 +69,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogou
         <UserCircle size={24} />
         <span className="text-xs md:text-base font-medium mt-1 md:mt-0">{t.navProfile}</span>
       </button>
-
       <div className="w-px h-8 bg-gray-200 md:hidden"></div>
       <div className="md:flex-grow"></div>
 

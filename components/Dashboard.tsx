@@ -26,9 +26,10 @@ interface DashboardProps {
   user: User;
   language: Language;
   refreshUser: () => void;
+  onOpenLeave?: () => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUser }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUser, onOpenLeave }) => {
   const t = translations[language];
 
   // --- STATE ---
@@ -40,6 +41,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
 
   const [orgEmployees, setOrgEmployees] = useState<UserStats[]>([]);
   const [pendingUsers, setPendingUsers] = useState<User[]>([]);
+  const [pendingContracts, setPendingContracts] = useState<User[]>([]);
+  const [orgUsers, setOrgUsers] = useState<User[]>([]);
+  const [orgAdjustments, setOrgAdjustments] = useState<any[]>([]);
   const [orgCode, setOrgCode] = useState<string>('');
   const [orgName, setOrgName] = useState<string>('');
   const [orgDetails, setOrgDetails] = useState<Organization | undefined>(undefined);
@@ -59,6 +63,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
   const [selectedEmployee, setSelectedEmployee] = useState<User | null>(null);
   const [selectedEmpLogs, setSelectedEmpLogs] = useState<TimeLog[]>([]);
   const [selectedEmpLeaves, setSelectedEmpLeaves] = useState<any[]>([]);
+  const [selectedEmpAdjustments, setSelectedEmpAdjustments] = useState<any[]>([]);
 
   // Helper for locale
   const getLocale = () => {
@@ -79,10 +84,65 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
        refreshUser();
    };
 
-  const calculateUserStats = (user: User, logs: TimeLog[], month: number, year: number): UserStats => {
+  const calculateUserStats = (user: User, logs: TimeLog[], adjustments: any[], month: number, year: number): UserStats => {
     const userId = user.id;
     // 1. Get ALL logs for current status (Last log check needs history)
-    const allUserLogs = logs.filter(l => l.userId === userId).sort((a,b) => a.timestamp - b.timestamp);
+    let allUserLogs = logs.filter(l => l.userId === userId).sort((a,b) => a.timestamp - b.timestamp);
+    // Apply approved adjustments: replace logs of that day with corrected clock-in/out and pause
+    const approvedAdj = adjustments.filter((a: any) => a.userId === userId && a.status === 'APPROVED');
+    const parseTime = (dateStr: string, timeStr?: string) => {
+      if (!timeStr) return null;
+      const normalized = timeStr.includes(':') ? timeStr.slice(0,5) : timeStr;
+      const d = new Date(`${dateStr}T${normalized}`);
+      const ts = d.getTime();
+      return isNaN(ts) ? null : ts;
+    };
+    approvedAdj.forEach((adj: any) => {
+      const startTs = parseTime(adj.date, adj.clockInNew || adj.clockIn);
+      const endTs = parseTime(adj.date, adj.clockOutNew || adj.clockOut);
+      const pauseStartTs = parseTime(adj.date, adj.pauseStartNew || adj.pauseStart);
+      const pauseEndTs = parseTime(adj.date, adj.pauseEndNew || adj.pauseEnd);
+      const d = new Date(adj.date);
+      if (d.getFullYear() === year && d.getMonth() === month && startTs !== null && endTs !== null && endTs > startTs) {
+        allUserLogs = allUserLogs.filter(l => l.dateString !== adj.date);
+        allUserLogs.push({
+          id: `adj-${adj.id}-in`,
+          userId,
+          orgId: user.orgId,
+          timestamp: startTs,
+          type: LogType.CLOCK_IN,
+          dateString: adj.date
+        });
+        if (pauseStartTs !== null && pauseEndTs !== null && pauseEndTs > pauseStartTs && pauseStartTs > startTs && pauseEndTs < endTs) {
+          allUserLogs.push({
+            id: `adj-${adj.id}-pstart`,
+            userId,
+            orgId: user.orgId,
+            timestamp: pauseStartTs,
+            type: LogType.START_BREAK,
+            dateString: adj.date
+          });
+          allUserLogs.push({
+            id: `adj-${adj.id}-pend`,
+            userId,
+            orgId: user.orgId,
+            timestamp: pauseEndTs,
+            type: LogType.END_BREAK,
+            dateString: adj.date
+          });
+        }
+        allUserLogs.push({
+          id: `adj-${adj.id}-out`,
+          userId,
+          orgId: user.orgId,
+          timestamp: endTs,
+          type: LogType.CLOCK_OUT,
+          dateString: adj.date
+        });
+      }
+    });
+    allUserLogs = allUserLogs.sort((a,b) => a.timestamp - b.timestamp);
+
     const last = allUserLogs.length > 0 ? allUserLogs[allUserLogs.length - 1] : undefined;
     let currentStatus = WorkStatus.IDLE;
     let currentLocation = undefined;
@@ -96,10 +156,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
         else if (last.type === LogType.START_BREAK) currentStatus = WorkStatus.ON_BREAK;
     }
 
-    // 2. Filter logs STRICTLY for the selected month for totals
-    const startOfMonth = new Date(year, month, 1).getTime();
-    const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999).getTime();
-    const monthlyLogs = allUserLogs.filter(l => l.timestamp >= startOfMonth && l.timestamp <= endOfMonth);
+    // 2. Filter logs strictly for selected month/year using date string to avoid TZ drift
+    const monthlyLogs = allUserLogs.filter(l => {
+      const d = new Date(l.dateString);
+      return d.getFullYear() === year && d.getMonth() === month;
+    });
 
     let totalMs = 0;
     const daysSet = new Set<string>();
@@ -163,14 +224,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
     } else {
         if (org) { setOrgCode(org.code); setOrgName(org.name); }
         const allUsers = await StorageService.getOrgEmployees(user.orgId);
+        setOrgUsers(allUsers);
         const activeEmployees = allUsers.filter(u => u.status === 'ACTIVE');
         const pending = allUsers.filter(u => u.status === 'PENDING_APPROVAL');
+        const pendingContractList = allUsers.filter(u => u.status === 'PENDING_CONTRACT');
         setPendingUsers(pending);
+        setPendingContracts(pendingContractList);
         const allLogs = await StorageService.getLogs(undefined, user.orgId);
+        const allAdjustments = await StorageService.getAdjustments();
+        setOrgAdjustments(allAdjustments);
         
         // Use exportMonth/Year to filter stats
         const stats: UserStats[] = activeEmployees.map(emp => {
-            return calculateUserStats(emp, allLogs, exportMonth, exportYear);
+            return calculateUserStats(emp, allLogs, allAdjustments, exportMonth, exportYear);
         });
         setOrgEmployees(stats);
     }
@@ -242,21 +308,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
       if (emp) {
           const allLogs = await StorageService.getLogs(empId);
           const allLeaves = await StorageService.getLeaveRequests(empId);
+          const allAdjustments = await StorageService.getAdjustments(empId);
           setSelectedEmployee(emp);
           setSelectedEmpLogs(allLogs);
           setSelectedEmpLeaves(allLeaves);
+          setSelectedEmpAdjustments(allAdjustments);
       }
   };
 
   const handleUpdateContract = async (empId: string, type: 'DETERMINATO' | 'INDETERMINATO', endDate?: string) => {
     await StorageService.updateContractInfo(empId, type, endDate);
     const allUsers = await StorageService.getOrgEmployees(user.orgId);
+    setOrgUsers(allUsers);
+    setPendingContracts(allUsers.filter(u => u.status === 'PENDING_CONTRACT'));
+    const allAdjustments = await StorageService.getAdjustments();
+    setOrgAdjustments(allAdjustments);
     const refreshed = allUsers.find((u: User) => u.id === empId);
     if (refreshed) setSelectedEmployee(refreshed);
+    refreshData();
   };
 
   const handleDownloadSingleReport = async (empId: string) => {
-     const docContent = await StorageService.exportDataAsDoc(empId, user.orgId, exportMonth, exportYear, language);
+     const docContent = await StorageService.exportDataAsDoc(empId, user.orgId, exportMonth, exportYear, language, orgUsers);
      const blob = new Blob([docContent], { type: 'application/msword' });
      const url = URL.createObjectURL(blob);
      const link = document.createElement('a');
@@ -268,19 +341,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
      document.body.removeChild(link);
   };
 
-  const handleExportCSV = async () => {
+  const handleExportDoc = async () => {
     if (!orgDetails?.isPro || orgDetails?.subscriptionStatus === 'EXPIRED') {
         setSubscriptionMode('UPGRADE');
         setShowSubscriptionModal(true);
         return;
     }
-    const docContent = await StorageService.exportDataAsDoc(undefined, user.orgId, exportMonth, exportYear, language);
+    const docContent = await StorageService.exportDataAsDoc(undefined, user.orgId, exportMonth, exportYear, language, orgUsers);
     const blob = new Blob([docContent], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const monthName = new Date(exportYear, exportMonth).toLocaleString('default', { month: 'long' });
-    link.setAttribute('download', `Report_${exportYear}_${monthName}.csv`);
+    const monthName = new Date(exportYear, exportMonth).toLocaleString(language === 'EN' ? 'en-US' : language.toLowerCase(), { month: 'long' });
+    link.setAttribute('download', `Report_${exportYear}_${monthName}.doc`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -363,8 +436,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
             
             <div className="max-w-md mx-auto w-full pt-safe px-4 pb-24 flex-1 overflow-y-auto no-scrollbar">
             <header className="mb-8 text-center mt-6">
-                <h1 className="text-2xl font-bold text-gray-800">{t.welcome}, {user.name} 👋</h1>
+                <h1 className="text-2xl font-bold text-gray-800">{t.welcome}, {user.name}</h1>
             </header>
+
         
             <div className={`mb-8 p-6 rounded-3xl border-2 flex flex-col items-center justify-center shadow-sm transition-all ${getStatusColor()}`}>
                 <div className="text-sm font-semibold uppercase tracking-wider opacity-70 mb-2">{t.empStatus}</div>
@@ -456,6 +530,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
                 user={selectedEmployee}
                 logs={selectedEmpLogs}
                 leaves={selectedEmpLeaves}
+                adjustments={selectedEmpAdjustments}
+                defaultMonth={exportMonth}
+                defaultYear={exportYear}
                 onUpdateContract={(type, endDate) => selectedEmployee ? handleUpdateContract(selectedEmployee.id, type, endDate) : Promise.resolve()}
                 onClose={() => setSelectedEmployee(null)}
                 language={language}
@@ -492,7 +569,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
                                 ))}
                              </select>
                         </div>
-                        <button onClick={handleExportCSV} disabled={isExpired} className="bg-white text-brand-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-sm hover:bg-brand-50 disabled:opacity-50">
+                        <button onClick={handleExportDoc} disabled={isExpired} className="bg-white text-brand-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-sm hover:bg-brand-50 disabled:opacity-50">
                             {orgDetails?.isPro ? <Download size={16} /> : <Crown size={16} />} 
                             {orgDetails?.isPro ? t.exportBtn : t.premiumBtn}
                         </button>
@@ -515,6 +592,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
                                     <div className="flex gap-2">
                                         <button onClick={() => handleRejectUser(u.id)} className="p-2 bg-red-50 text-red-600 rounded-lg"><X size={20} /></button>
                                         <button onClick={() => handleApproveUser(u.id)} className="p-2 bg-green-50 text-green-600 rounded-lg"><Check size={20} /></button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {pendingContracts.length > 0 && (
+                <div className="mb-8">
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 shadow-sm">
+                        <h2 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2"><ShieldAlert size={20} /> {t.pendingContracts} ({pendingContracts.length})</h2>
+                        <div className="space-y-3">
+                            {pendingContracts.map(u => (
+                                <div key={u.id} className="bg-white p-3 rounded-xl border border-blue-100 flex justify-between items-center shadow-sm">
+                                    <div>
+                                        <div className="font-bold text-gray-800">{u.name}</div>
+                                        <div className="text-xs text-gray-500 font-mono">{u.taxId}</div>
+                                        <div className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full inline-block mt-1">{t.contractMissing}</div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleOpenEmployeeDetail(u.id)} className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">{t.assignContract}</button>
+                                        <button onClick={(e) => handleDeleteEmployee(e, u.id)} className="p-2 bg-red-50 text-red-600 rounded-lg" title={t.deleteEmp}><Trash2 size={18} /></button>
                                     </div>
                                 </div>
                             ))}

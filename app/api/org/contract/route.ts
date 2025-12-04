@@ -11,15 +11,30 @@ export async function PATCH(req: Request) {
     if (!targetUserId || !contractType) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
     const supabase = supabaseServer();
-    const { error } = await supabase
+    const { data: updatedUser, error } = await supabase
       .from('users')
       .update({
         contract_type: contractType,
-        contract_end_date: contractType === 'DETERMINATO' ? (contractEndDate || null) : null
+        contract_end_date: contractType === 'DETERMINATO' ? (contractEndDate || null) : null,
+        status: 'ACTIVE'
       })
-      .eq('id', targetUserId);
+      .eq('id', targetUserId)
+      .select()
+      .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    // Notify the employee that contract has been set/updated
+    if (updatedUser) {
+      await supabase.from('notifications').insert({
+        user_id: targetUserId,
+        org_id: user.orgId,
+        type: 'CONTRACT_UPDATED',
+        title: 'Contratto aggiornato',
+        body: contractType === 'DETERMINATO'
+          ? `Contratto a termine - scadenza ${contractEndDate || 'N/D'}`
+          : 'Contratto a tempo indeterminato'
+      });
+    }
     return NextResponse.json({ success: true });
   } catch (err: any) {
     const status = err?.status || 500;
