@@ -5,7 +5,7 @@ import { User, TimeLog, LeaveRequest, Language, LeaveType, TimeAdjustment } from
 import { translations } from '../constants/translations';
 import { X, Calendar, Clock, AlertCircle, Mail, User as UserIcon, Download } from 'lucide-react';
 import { StorageService } from '../services/storageService';
-import { buildDayAggregates, mergeLogsWithAdjustments } from '../lib/timeUtils';
+import { buildDayAggregates } from '../lib/timeUtils';
 import { formatDate, formatHours } from '../lib/format';
 
 interface EmployeeDetailModalProps {
@@ -48,8 +48,8 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
 
   // --- Hours aggregation (no raw logs shown) ---
   const timeAggregation = useMemo(() => {
-    const mergedLogs = mergeLogsWithAdjustments(logs, adjustments || []);
-    const monthLogs = mergedLogs
+    // Adjustments approvate sono già riflesse nei time_logs lato server; usiamo solo i log
+    const monthLogs = logs
       .filter(l => {
         const d = new Date(l.dateString);
         return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
@@ -82,7 +82,7 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
       monthTotal,
       activeWeek
     };
-  }, [logs, adjustments, selectedMonth, selectedYear, selectedWeek]);
+  }, [logs, selectedMonth, selectedYear, selectedWeek]);
 
   useEffect(() => {
     setSelectedWeek(0);

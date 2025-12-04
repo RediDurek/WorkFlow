@@ -8,7 +8,7 @@ import { SubscriptionModal } from './SubscriptionModal';
 import { OnboardingTutorial } from './OnboardingTutorial';
 import { EmployeeDetailModal } from './EmployeeDetailModal';
 import { translations } from '../constants/translations';
-import { buildDayAggregates, mergeLogsWithAdjustments } from '../lib/timeUtils';
+import { buildDayAggregates } from '../lib/timeUtils';
 
 // Fallback UUID generator for environments where crypto.randomUUID is not available
 const generateUUID = (): string => {
@@ -87,11 +87,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, language, refreshUse
 
   const calculateUserStats = (user: User, logs: TimeLog[], adjustments: any[], month: number, year: number): UserStats => {
     const userId = user.id;
-    // 1. Get ALL logs for current status (Last log check needs history) and merge approved adjustments
-    const allUserLogs = mergeLogsWithAdjustments(
-      logs.filter(l => l.userId === userId).sort((a,b) => a.timestamp - b.timestamp),
-      adjustments.filter((a: any) => a.userId === userId)
-    );
+    // 1. Get ALL logs for current status (Last log check needs history); adjustments are already reflected in logs
+    const allUserLogs = logs.filter(l => l.userId === userId).sort((a,b) => a.timestamp - b.timestamp);
 
     const last = allUserLogs.length > 0 ? allUserLogs[allUserLogs.length - 1] : undefined;
     let currentStatus = WorkStatus.IDLE;

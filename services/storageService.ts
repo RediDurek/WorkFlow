@@ -1,7 +1,7 @@
 'use client';
 
 import { TimeLog, LeaveRequest, User, Organization, UserStatus, Language, NotificationItem, TimeAdjustment } from '../types';
-import { buildDayAggregates, mergeLogsWithAdjustments, parseTimeOnDate } from '../lib/timeUtils';
+import { buildDayAggregates } from '../lib/timeUtils';
 import { formatDateShort, formatHours } from '../lib/format';
 
 const fetchJson = async <T = any>(url: string, options?: RequestInit): Promise<T> => {
@@ -267,21 +267,16 @@ export const StorageService = {
   },
 
   getWorkSummary: async (userId: string | undefined, orgId: string | undefined, month: number | undefined, year: number | undefined, language: Language = 'IT') => {
-    // build summary client-side using existing logs API
+    // build summary client-side using existing logs API; adjustments approvate sono già riflesse nei time_logs
     const logs = await StorageService.getLogs(userId, orgId);
-    const adjustments = await StorageService.getAdjustments(userId);
-    const approvedAdjustments = adjustments.filter(a => a.status === 'APPROVED');
-
-    // apply approved adjustments: replace logs for that user/day with corrected in/out
-    const mergedLogs = mergeLogsWithAdjustments(logs, approvedAdjustments as any);
 
     const locale = language === 'EN' ? 'en-US' : language.toLowerCase();
     const formatTime = (ts: number) => new Date(ts).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
 
     // filter by month/year using dateString to avoid TZ drift between months
-    let filteredLogs = mergedLogs;
+    let filteredLogs = logs;
     if (month !== undefined && year !== undefined) {
-      filteredLogs = mergedLogs.filter(l => {
+      filteredLogs = logs.filter(l => {
         const d = new Date(l.dateString);
         return d.getFullYear() === year && d.getMonth() === month;
       });

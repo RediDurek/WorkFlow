@@ -33,6 +33,7 @@ export const computeNetHours = (dateStr: string, clockIn?: string, clockOut?: st
 
 // Merge logs with approved adjustments: for each approved adjustment replace that day's logs with corrected ones (including pause).
 export const mergeLogsWithAdjustments = (logs: TimeLog[], adjustments: TimeAdjustment[]): TimeLog[] => {
+  // Only approved adjustments should affect time logs (pending/rejected must be ignored)
   const approvedAdj = adjustments.filter(a => a.status === 'APPROVED');
   let mergedLogs = [...logs];
 
