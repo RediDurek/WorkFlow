@@ -381,18 +381,7 @@ export const StorageService = {
     for (const [uid, dayMap] of byUser.entries()) {
       const days: DaySummary[] = Array.from(dayMap.keys()).sort().map(dk => {
         const entry = dayMap.get(dk)!;
-        // Always compute min/max per day to ensure duration > 0 when logs exist
-        const logsDay = filteredLogs.filter(l => l.userId === uid && new Date(l.timestamp).toISOString().split('T')[0] === dk);
-        const ins = logsDay.filter(l => l.type === 'CLOCK_IN' || l.type === 'END_BREAK').map(l => l.timestamp);
-        const outs = logsDay.filter(l => l.type === 'CLOCK_OUT' || l.type === 'START_BREAK').map(l => l.timestamp);
-        if (ins.length && outs.length) {
-          const minIn = Math.min(...ins);
-          const maxOut = Math.max(...outs);
-          if (maxOut > minIn) {
-            entry.totalMs = maxOut - minIn;
-            entry.segments = [{ start: minIn, end: maxOut }];
-          }
-        }
+        // Usa i segmenti già calcolati (netti dalle pause) senza collassare min/max
         const desc = entry.segments.length === 0
           ? ''
           : entry.segments.length === 1
