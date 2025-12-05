@@ -92,8 +92,8 @@ export const Adjustments: React.FC<AdjustmentsProps> = ({ user, language, refres
     <div className="max-w-3xl mx-auto w-full pt-safe px-4 pb-24">
       <header className="flex justify-between items-center mb-6 mt-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Correzioni ore</h1>
-          <p className="text-gray-500 text-sm">{user.role === 'ADMIN' ? 'Gestisci le richieste di correzione' : 'Richiedi una correzione se ti sei dimenticato di timbrare'}</p>
+          <h1 className="text-2xl font-bold text-gray-800">{t.adjustmentsTitle}</h1>
+          <p className="text-gray-500 text-sm">{user.role === 'ADMIN' ? t.adjustmentsSubAdmin : t.adjustmentsSubEmp}</p>
         </div>
         {user.role === 'EMPLOYEE' && (
           <button onClick={() => setShowForm(true)} className="bg-brand-600 text-white p-3 rounded-full shadow-lg hover:bg-brand-700 active:scale-95 transition-transform">
@@ -104,48 +104,48 @@ export const Adjustments: React.FC<AdjustmentsProps> = ({ user, language, refres
 
       {user.role === 'EMPLOYEE' && showForm && (
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><ClipboardList size={18} className="text-brand-600" /> Nuova correzione</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><ClipboardList size={18} className="text-brand-600" /> {t.adjustmentsNew}</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
              <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Giorno (già registrato)</label>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">{t.adjustmentsDay}</label>
                 <select value={date} onChange={e => setDate(e.target.value)} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
-                  <option value="" disabled>Seleziona un giorno timbrato</option>
+                  <option value="" disabled>{t.adjustmentsDayPlaceholder}</option>
                   {availableDays.map(d => (
                     <option key={d} value={d}>{new Date(d).toLocaleDateString()}</option>
                   ))}
                 </select>
-                {availableDays.length === 0 && <div className="text-[11px] text-red-500 mt-1">Nessun giorno timbrato disponibile</div>}
+                {availableDays.length === 0 && <div className="text-[11px] text-red-500 mt-1">{t.noAdjustmentsDays || t.adjustmentsNoDays}</div>}
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Ingresso</label>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">{t.adjustmentsIn}</label>
                 <input type="time" value={clockIn} onChange={e => setClockIn(e.target.value)} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2" />
-                {clockInOld && <div className="text-[10px] text-gray-400 mt-1">Attuale: {clockInOld}</div>}
+                {clockInOld && <div className="text-[10px] text-gray-400 mt-1">{t.before}: {clockInOld}</div>}
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Uscita</label>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">{t.adjustmentsOut}</label>
                 <input type="time" value={clockOut} onChange={e => setClockOut(e.target.value)} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2" />
-                {clockOutOld && <div className="text-[10px] text-gray-400 mt-1">Attuale: {clockOutOld}</div>}
+                {clockOutOld && <div className="text-[10px] text-gray-400 mt-1">{t.before}: {clockOutOld}</div>}
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-500 mb-1 block">Motivo</label>
-              <textarea value={reason} onChange={e => setReason(e.target.value)} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 h-20 resize-none" placeholder="Es. dimenticato il badge, uscita anticipata..." />
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">{t.adjustmentsReason}</label>
+              <textarea value={reason} onChange={e => setReason(e.target.value)} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 h-20 resize-none" placeholder={t.adjustmentsReasonPh} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Pausa (inizio)</label>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">{t.adjustmentsPauseStart}</label>
                 <input type="time" value={pauseStart} onChange={e => setPauseStart(e.target.value)} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2" />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Pausa (fine)</label>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">{t.adjustmentsPauseEnd}</label>
                 <input type="time" value={pauseEnd} onChange={e => setPauseEnd(e.target.value)} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2" />
               </div>
             </div>
             <div className="flex gap-2 justify-end">
-              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600">Annulla</button>
+              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600">{t.cancel}</button>
               <button type="submit" disabled={loading} className="px-4 py-2 rounded-lg bg-brand-600 text-white font-bold hover:bg-brand-700 disabled:opacity-60">
-                {loading ? 'Invio...' : <span className="flex items-center gap-2"><Send size={16} /> Invia</span>}
+                {loading ? t.sending : <span className="flex items-center gap-2"><Send size={16} /> {t.send}</span>}
               </button>
             </div>
           </form>
@@ -154,28 +154,28 @@ export const Adjustments: React.FC<AdjustmentsProps> = ({ user, language, refres
 
       {user.role === 'ADMIN' && pendingAdjustments.length > 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 shadow-sm mb-6">
-          <div className="flex items-center gap-2 text-yellow-900 font-bold mb-3"><AlertTriangle size={18} /> In attesa di approvazione ({pendingAdjustments.length})</div>
+          <div className="flex items-center gap-2 text-yellow-900 font-bold mb-3"><AlertTriangle size={18} /> {t.adjustmentsPending} ({pendingAdjustments.length})</div>
           <div className="space-y-3">
             {pendingAdjustments.map(a => (
               <div key={a.id} className="bg-white border border-yellow-100 rounded-xl p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
                   <div className="text-sm font-bold text-gray-900">{new Date(a.date).toLocaleDateString()}</div>
-                  <div className="text-xs text-gray-500"><span className="font-semibold text-gray-700">Prima:</span> {formatTime(a.clockInOld)} / {formatTime(a.clockOutOld)}</div>
-                  <div className="text-xs text-gray-500"><span className="font-semibold text-gray-700">Dopo:</span> {formatTime(a.clockInNew || a.clockIn)} / {formatTime(a.clockOutNew || a.clockOut)}</div>
+                  <div className="text-xs text-gray-500"><span className="font-semibold text-gray-700">{t.before}:</span> {formatTime(a.clockInOld)} / {formatTime(a.clockOutOld)}</div>
+                  <div className="text-xs text-gray-500"><span className="font-semibold text-gray-700">{t.after}:</span> {formatTime(a.clockInNew || a.clockIn)} / {formatTime(a.clockOutNew || a.clockOut)}</div>
                   {(a.pauseStartNew || a.pauseEndNew || a.pauseStart || a.pauseEnd) ? (
-                    <div className="text-[11px] text-gray-500">Pausa: {formatTime(a.pauseStartNew || a.pauseStart)} - {formatTime(a.pauseEndNew || a.pauseEnd)}</div>
+                    <div className="text-[11px] text-gray-500">{t.pause}: {formatTime(a.pauseStartNew || a.pauseStart)} - {formatTime(a.pauseEndNew || a.pauseEnd)}</div>
                   ) : (
-                    <div className="text-[11px] text-gray-400">Pausa: nessuna</div>
+                    <div className="text-[11px] text-gray-400">{t.pause}: {t.none}</div>
                   )}
-                  <div className="text-[11px] text-gray-500">Netto proposto: {(() => {
+                  <div className="text-[11px] text-gray-500">{t.netProposed}: {(() => {
                     const h = getNetHours(a.date, a.clockInNew || a.clockIn, a.clockOutNew || a.clockOut, a.pauseStartNew || a.pauseStart, a.pauseEndNew || a.pauseEnd);
-                    return h !== null ? `${h.toFixed(2)} h` : 'n/d';
+                    return h !== null ? `${h.toFixed(2)} h` : t.notAvailable;
                   })()}</div>
-                  <div className="text-xs text-gray-600 mt-1">Motivo: {a.reason}</div>
+                  <div className="text-xs text-gray-600 mt-1">{t.adjustmentsReason}: {a.reason}</div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => handleDecision(a.id, 'REJECTED')} className="px-3 py-2 rounded-lg bg-red-50 text-red-600 flex items-center gap-1"><X size={16} /> Rifiuta</button>
-                  <button onClick={() => handleDecision(a.id, 'APPROVED')} className="px-3 py-2 rounded-lg bg-green-50 text-green-700 flex items-center gap-1"><Check size={16} /> Approva</button>
+                  <button onClick={() => handleDecision(a.id, 'REJECTED')} className="px-3 py-2 rounded-lg bg-red-50 text-red-600 flex items-center gap-1"><X size={16} /> {t.reject}</button>
+                  <button onClick={() => handleDecision(a.id, 'APPROVED')} className="px-3 py-2 rounded-lg bg-green-50 text-green-700 flex items-center gap-1"><Check size={16} /> {t.approve}</button>
                 </div>
               </div>
             ))}
@@ -185,38 +185,38 @@ export const Adjustments: React.FC<AdjustmentsProps> = ({ user, language, refres
 
       <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><ClipboardList size={18} className="text-brand-600" /> Storico richieste</h3>
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><ClipboardList size={18} className="text-brand-600" /> {t.adjustmentsHistory}</h3>
           <span className="text-xs text-gray-400">Totale: {adjustments.length}</span>
         </div>
         {adjustments.length === 0 ? (
-          <div className="text-sm text-gray-400 text-center py-6">Nessuna richiesta di correzione.</div>
+          <div className="text-sm text-gray-400 text-center py-6">{t.noAdjustments}</div>
         ) : (
           <div className="space-y-2">
             {adjustments.map(a => (
               <div key={a.id} className="border border-gray-100 rounded-xl p-3 flex justify-between items-start bg-gray-50">
                 <div>
-                  <div className="text-sm font-bold text-gray-900">{new Date(a.date).toLocaleDateString()} ? {formatTime(a.clockInNew || a.clockIn)} - {formatTime(a.clockOutNew || a.clockOut)}</div>
+                  <div className="text-sm font-bold text-gray-900">{new Date(a.date).toLocaleDateString()} - {formatTime(a.clockInNew || a.clockIn)} - {formatTime(a.clockOutNew || a.clockOut)}</div>
                   {(a.clockInOld || a.clockOutOld) && (
-                    <div className="text-[11px] text-gray-500">Prima: {formatTime(a.clockInOld)} - {formatTime(a.clockOutOld)}</div>
+                    <div className="text-[11px] text-gray-500">{t.before}: {formatTime(a.clockInOld)} - {formatTime(a.clockOutOld)}</div>
                   )}
                   {(a.pauseStartNew || a.pauseEndNew || a.pauseStart || a.pauseEnd) ? (
-                    <div className="text-[11px] text-gray-500">Pausa: {formatTime(a.pauseStartNew || a.pauseStart)} - {formatTime(a.pauseEndNew || a.pauseEnd)}</div>
+                    <div className="text-[11px] text-gray-500">{t.pause}: {formatTime(a.pauseStartNew || a.pauseStart)} - {formatTime(a.pauseEndNew || a.pauseEnd)}</div>
                   ) : (
-                    <div className="text-[11px] text-gray-400">Pausa: nessuna</div>
+                    <div className="text-[11px] text-gray-400">{t.pause}: {t.none}</div>
                   )}
-                  <div className="text-[11px] text-gray-500">Netto approvato: {(() => {
+                  <div className="text-[11px] text-gray-500">{t.netApproved}: {(() => {
                     const h = getNetHours(a.date, a.clockInNew || a.clockIn, a.clockOutNew || a.clockOut, a.pauseStartNew || a.pauseStart, a.pauseEndNew || a.pauseEnd);
-                    return h !== null ? `${h.toFixed(2)} h` : 'n/d';
+                    return h !== null ? `${h.toFixed(2)} h` : t.notAvailable;
                   })()}</div>
-                  <div className="text-xs text-gray-600 mt-1">Motivo: {a.reason}</div>
-                  <div className="text-[11px] text-gray-400 mt-1">Richiesta il {new Date(a.createdAt).toLocaleDateString()}</div>
+                  <div className="text-xs text-gray-600 mt-1">{t.adjustmentsReason}: {a.reason}</div>
+                  <div className="text-[11px] text-gray-400 mt-1">{t.requestedOn}: {new Date(a.createdAt).toLocaleDateString()}</div>
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
                   a.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
                   a.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
                   'bg-yellow-100 text-yellow-700'
                 }`}>
-                  {a.status}
+                  {a.status === 'APPROVED' ? t.approved : a.status === 'REJECTED' ? t.rejected : t.pending}
                 </span>
               </div>
             ))}

@@ -21,7 +21,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
   const [isDeleting, setIsDeleting] = useState(false);
   const [org, setOrg] = useState<Organization | undefined>(undefined);
   const [showTutorial, setShowTutorial] = useState(false);
-  const [contractInfo, setContractInfo] = useState<{ type: string; badge: string; label: string }>({ type: user.contractType || 'INDETERMINATO', badge: 'bg-green-100 text-green-700', label: 'Indeterminato' });
+  const [contractInfo, setContractInfo] = useState<{ type: string; badge: string; label: string }>({ type: user.contractType || 'INDETERMINATO', badge: 'bg-green-100 text-green-700', label: t.contractTypeIndef });
   
   // Export State
   const [exportMonth, setExportMonth] = useState<number>(new Date().getMonth());
@@ -42,12 +42,12 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
       return;
     }
     let badge = 'bg-green-100 text-green-700';
-    let label = type === 'INDETERMINATO' ? 'Indeterminato' : 'Determinato';
+    let label = type === 'INDETERMINATO' ? t.contractTypeIndef : t.contractTypeDef;
     if (type === 'DETERMINATO' && user.contractEndDate) {
       const days = Math.ceil((new Date(user.contractEndDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
       if (days <= 30) badge = 'bg-red-100 text-red-700';
       else badge = 'bg-yellow-100 text-yellow-800';
-      label += ` (scade ${formatDate(user.contractEndDate, locale)})`;
+      label += ` (${t.contractExpiresOn} ${formatDate(user.contractEndDate, locale)})`;
     }
     setContractInfo({ type, badge, label });
   }, [user]);
@@ -68,7 +68,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
   };
 
   const handleDeleteAccount = async () => {
-      if(confirm('ARE YOU SURE? Irreversible.')) {
+      if(confirm(t.confirmDeleteAccount)) {
           setIsDeleting(true);
           await StorageService.deleteAccount();
           onLogout();
@@ -76,7 +76,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
   };
 
   const handleCancelRenew = async () => {
-      if(confirm('Confermi disdetta rinnovo?')) {
+      if(confirm(t.confirmCancelRenew)) {
           await StorageService.cancelAutoRenew();
           setOrg(prev => prev ? {...prev, autoRenew: false} : undefined);
           alert(t.cancelSuccess);
@@ -99,11 +99,11 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
             onChange={(e) => setLanguage(e.target.value as Language)}
             className="bg-white border border-gray-200 rounded-lg p-2 text-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
         >
-            <option value="IT">🇮🇹</option>
-            <option value="EN">🇺🇸</option>
-            <option value="ES">🇪🇸</option>
-            <option value="FR">🇫🇷</option>
-            <option value="DE">🇩🇪</option>
+            <option value="IT">Italiano</option>
+            <option value="EN">English</option>
+            <option value="ES">Espa?ol</option>
+            <option value="FR">Fran?ais</option>
+            <option value="DE">Deutsch</option>
         </select>
       </header>
 
@@ -114,7 +114,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-400 bg-gray-50 p-3 rounded-xl mb-3"><Building size={16} /><span>{t.role}: <strong>{user.role}</strong></span></div>
           <div className="flex items-center justify-between text-sm bg-gray-50 p-3 rounded-xl border border-gray-100">
-            <div className="text-gray-700 font-semibold">Contratto</div>
+            <div className="text-gray-700 font-semibold">{t.contractLabel}</div>
             <span className={`px-3 py-1 rounded-full text-xs font-bold ${contractInfo.badge}`}>{contractInfo.label}</span>
           </div>
       </div>
@@ -154,7 +154,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
           </div>
       )}
 
-      <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2"><Shield size={18} className="text-gray-400" /> Privacy & GDPR</h3>
+      <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2"><Shield size={18} className="text-gray-400" /> {t.privacyGdpr}</h3>
       <div className="space-y-3">
           <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
              <div className="flex items-center gap-3 mb-3">

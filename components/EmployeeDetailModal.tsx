@@ -67,7 +67,7 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
       if (!weeksMap.has(weekIdx)) {
         const startDay = weekIdx * 7 + 1;
         const endDay = Math.min(startDay + 6, new Date(selectedYear, selectedMonth + 1, 0).getDate());
-        weeksMap.set(weekIdx, { label: `Settimana ${weekIdx + 1} (${startDay}-${endDay})`, ms: 0, days: [] });
+        weeksMap.set(weekIdx, { label: `${t.weekLabel} ${weekIdx + 1} (${startDay}-${endDay})`, ms: 0, days: [] });
       }
       const week = weeksMap.get(weekIdx)!;
       week.ms += d.ms;
@@ -124,7 +124,7 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
            </div>
            <div className="flex items-center gap-2">
              <button onClick={handleDownloadReport} className="inline-flex items-center gap-2 px-3 py-2 text-sm font-bold text-brand-600 bg-white border border-brand-100 rounded-lg hover:bg-brand-50">
-               <Download size={16} /> Scarica report
+               <Download size={16} /> {t.downloadReport}
              </button>
              <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full text-gray-500"><X size={24} /></button>
            </div>
@@ -153,16 +153,16 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
                     return (
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-[11px] font-bold text-gray-500 uppercase">Contratto</div>
+                          <div className="text-[11px] font-bold text-gray-500 uppercase">{t.contractLabel}</div>
                           <div className="text-sm text-gray-800">
-                            {!hasContract ? t.contractMissing : type === 'INDETERMINATO' ? 'Indeterminato' : 'Determinato'}
+                            {!hasContract ? t.contractMissing : type === 'INDETERMINATO' ? t.contractTypeIndef : t.contractTypeDef}
                             {hasContract && type === 'DETERMINATO' && end && (
-                              <span className="ml-2 text-gray-500">Scadenza: {formatDate(end.getTime())}</span>
+                              <span className="ml-2 text-gray-500">{t.contractExpiresOn}: {formatDate(end.getTime())}</span>
                             )}
                           </div>
                         </div>
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${badgeColor}`}>
-                          {!hasContract ? t.contractMissing : type === 'INDETERMINATO' ? 'Indeterminato' : daysLeft !== null ? `Scade in ${daysLeft} gg` : 'Determinato'}
+                          {!hasContract ? t.contractMissing : type === 'INDETERMINATO' ? t.contractTypeIndef : daysLeft !== null ? `${t.contractExpiresIn} ${daysLeft} gg` : t.contractTypeDef}
                         </span>
                       </div>
                     );
@@ -171,15 +171,15 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
                   {onUpdateContract && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-end">
                       <div className="md:col-span-1">
-                        <label className="text-[11px] font-bold text-gray-500 uppercase block mb-1">Tipo</label>
+                        <label className="text-[11px] font-bold text-gray-500 uppercase block mb-1">{t.contractTypeLabel}</label>
                         <select value={contractType} onChange={e => setContractType(e.target.value as any)} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm">
-                          <option value="INDETERMINATO">Indeterminato</option>
-                          <option value="DETERMINATO">Determinato</option>
+                          <option value="INDETERMINATO">{t.contractTypeIndef}</option>
+                          <option value="DETERMINATO">{t.contractTypeDef}</option>
                         </select>
                       </div>
                       {contractType === 'DETERMINATO' && (
                         <div className="md:col-span-1">
-                          <label className="text-[11px] font-bold text-gray-500 uppercase block mb-1">Scadenza</label>
+                          <label className="text-[11px] font-bold text-gray-500 uppercase block mb-1">{t.contractExpiresOn}</label>
                           <input type="date" value={contractEnd} onChange={e => setContractEnd(e.target.value)} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" />
                         </div>
                       )}
@@ -194,7 +194,7 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
                           className="w-full bg-brand-600 text-white rounded-lg py-2 text-sm font-bold hover:bg-brand-700 disabled:opacity-60"
                           disabled={savingContract}
                         >
-                          {savingContract ? 'Salvataggio...' : 'Salva contratto'}
+                          {savingContract ? t.savingContract : t.saveContract}
                         </button>
                       </div>
                     </div>
@@ -228,13 +228,13 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
               <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><Clock size={20} className="text-brand-600" /> {t.leaveHistory}</h3>
               {leaves.length > 2 && (
                 <button onClick={() => setShowAllLeaves(!showAllLeaves)} className="text-xs font-semibold text-brand-600 hover:text-brand-700">
-                  {showAllLeaves ? 'Nascondi' : 'Vedi tutto'}
+                  {showAllLeaves ? t.hideAll : t.showAll}
                 </button>
               )}
             </div>
             <div className="space-y-3">
                 {leaves.length === 0 ? (
-                    <p className="text-center text-gray-400 py-4 italic">Nessuna richiesta trovata.</p>
+                    <p className="text-center text-gray-400 py-4 italic">{t.noLeaveRequests}</p>
                 ) : (
                     (showAllLeaves ? leaves : leaves.slice(0, 2)).map(l => (
                         <div key={l.id} className="bg-white border border-gray-100 p-3 rounded-xl flex justify-between items-center shadow-sm">
@@ -247,7 +247,7 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
                             </div>
                             <div>
                                 <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${l.status === 'APPROVED' ? 'bg-green-100 text-green-700' : l.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                    {l.status}
+                                    {l.status === 'APPROVED' ? t.approved : l.status === 'REJECTED' ? t.rejected : t.pending}
                                 </span>
                             </div>
                         </div>
@@ -261,7 +261,7 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
                 <div>
                   <div className="text-[11px] font-bold text-gray-500 uppercase">{t.totalHours}</div>
                   <div className="text-2xl font-extrabold text-gray-900">{formatHours(timeAggregation.monthTotal)} h</div>
-                  <div className="text-xs text-gray-400">Totale mese selezionato</div>
+                  <div className="text-xs text-gray-400">{t.monthTotalSelected}</div>
                 </div>
                 <div className="flex gap-2">
                   <select value={selectedMonth} onChange={e => setSelectedMonth(parseInt(e.target.value))} className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm">
@@ -289,7 +289,7 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
                   <table className="w-full border-collapse">
                     <tbody>
                       {timeAggregation.activeWeek.days.length === 0 ? (
-                        <tr><td className="px-4 py-3 text-sm text-gray-400 text-center">Nessuna attività registrata</td></tr>
+                        <tr><td className="px-4 py-3 text-sm text-gray-400 text-center">{t.noActivity}</td></tr>
                       ) : (
                         timeAggregation.activeWeek.days.map((d, idx) => (
                           <tr key={d.dateKey} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
@@ -299,14 +299,14 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
                         ))
                       )}
                       <tr className="bg-brand-50">
-                        <td className="px-4 py-3 text-sm font-bold text-brand-900">Totale settimana</td>
+                        <td className="px-4 py-3 text-sm font-bold text-brand-900">{t.weekTotal}</td>
                         <td className="px-4 py-3 text-sm text-right font-extrabold text-brand-900">{formatHours(timeAggregation.activeWeek.ms)} h</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
               ) : (
-                <div className="text-center text-gray-400 text-sm py-4">Nessuna attività nel periodo selezionato.</div>
+                <div className="text-center text-gray-400 text-sm py-4">{t.noActivity}</div>
               )}
             </div>
 

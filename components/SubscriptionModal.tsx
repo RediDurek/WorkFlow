@@ -30,7 +30,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
     if (success) {
       onSuccess();
     } else {
-      alert("Error");
+      alert(t.genericError);
     }
   };
 
@@ -45,12 +45,12 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
 
         <div className="bg-gradient-to-br from-brand-600 to-brand-800 p-8 text-white text-center relative overflow-hidden">
             <h2 className="text-2xl font-bold mb-2 relative z-10">{isTrialSetup ? t.trialTitle : t.upgradeTitle}</h2>
-            <p className="text-brand-100 text-sm relative z-10">{isTrialSetup ? t.trialSubtitle : 'Unlimited Access.'}</p>
+            <p className="text-brand-100 text-sm relative z-10">{isTrialSetup ? t.trialSubtitle : t.subscriptionTagline}</p>
         </div>
 
         <div className="p-8">
             <div className="mb-6 text-center">
-                <span className="text-4xl font-bold text-gray-900">8€</span>
+                <span className="text-4xl font-bold text-gray-900">{t.priceLabel}</span>
             </div>
 
             <form onSubmit={handleSubscribe} className="space-y-4 pt-4 border-t border-gray-100">

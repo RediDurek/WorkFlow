@@ -165,7 +165,7 @@ export const LeaveRequests: React.FC<LeaveRequestsProps> = ({ user, language, re
                   <label className="block text-xs font-medium text-gray-500 mb-1">{t.uploadDoc}</label>
                   <label className="flex items-center gap-3 w-full bg-gray-50 border border-dashed border-gray-300 rounded-xl p-3 cursor-pointer hover:bg-gray-100 transition-colors">
                       <div className="bg-white p-2 rounded-lg border border-gray-200 text-gray-500"><Paperclip size={20} /></div>
-                      <span className="text-sm text-gray-500 truncate">{attachment ? 'Immagine caricata!' : t.uploadDoc}</span>
+                      <span className="text-sm text-gray-500 truncate">{attachment ? t.uploadSuccess : t.uploadDoc}</span>
                       <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   </label>
                   {attachment && (
@@ -184,7 +184,7 @@ export const LeaveRequests: React.FC<LeaveRequestsProps> = ({ user, language, re
 
       <div className={`grid gap-4 ${user.role === 'ADMIN' ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
         {requests.length === 0 ? (
-          <div className="col-span-full text-center py-12 opacity-50"><Calendar size={48} className="mx-auto mb-3 text-gray-300" /><p>Nessuna richiesta.</p></div>
+          <div className="col-span-full text-center py-12 opacity-50"><Calendar size={48} className="mx-auto mb-3 text-gray-300" /><p>{t.noLeaveRequests}</p></div>
         ) : (
           requests.map(req => (
             <div key={req.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full">

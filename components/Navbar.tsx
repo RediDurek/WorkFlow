@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogou
           <Edit3 size={24} />
           {adjustmentsPendingCount > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full px-1">{adjustmentsPendingCount}</span>}
         </div>
-        <span className="text-xs md:text-base font-medium mt-1 md:mt-0">Correzioni</span>
+        <span className="text-xs md:text-base font-medium mt-1 md:mt-0">{t.navAdjustments}</span>
       </button>
 
       <button
