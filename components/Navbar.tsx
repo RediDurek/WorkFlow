@@ -6,15 +6,16 @@ import { Language } from '../types';
 import { translations } from '../constants/translations';
 
 interface NavbarProps {
-  activeTab: 'dashboard' | 'leave' | 'adjustments' | 'profile';
-  setActiveTab: (tab: 'dashboard' | 'leave' | 'adjustments' | 'profile') => void;
+  activeTab: 'dashboard' | 'leave' | 'adjustments' | 'announcements' | 'profile';
+  setActiveTab: (tab: 'dashboard' | 'leave' | 'adjustments' | 'announcements' | 'profile') => void;
   onLogout: () => void;
   language: Language;
   leaveUnreadCount: number;
   adjustmentsPendingCount: number;
+  announcementsUnreadCount: number;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogout, language, leaveUnreadCount, adjustmentsPendingCount }) => {
+export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogout, language, leaveUnreadCount, adjustmentsPendingCount, announcementsUnreadCount }) => {
   const t = translations[language];
 
   return (
@@ -58,6 +59,19 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogou
           {adjustmentsPendingCount > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full px-1">{adjustmentsPendingCount}</span>}
         </div>
         <span className="text-xs md:text-base font-medium mt-1 md:mt-0">{t.navAdjustments}</span>
+      </button>
+
+      <button
+        onClick={() => setActiveTab('announcements')}
+        className={`flex flex-col md:flex-row md:w-full md:space-x-3 items-center justify-center p-2 rounded-xl transition-colors ${
+          activeTab === 'announcements' ? 'text-brand-600 bg-brand-50' : 'text-gray-400 hover:text-gray-600'
+        }`}
+      >
+        <div className="relative">
+          <Calendar size={24} />
+          {announcementsUnreadCount > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full px-1">{announcementsUnreadCount}</span>}
+        </div>
+        <span className="text-xs md:text-base font-medium mt-1 md:mt-0">{t.navAnnouncements}</span>
       </button>
 
       <button

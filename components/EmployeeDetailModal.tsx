@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { User, TimeLog, LeaveRequest, Language, LeaveType, TimeAdjustment } from '../types';
 import { translations } from '../constants/translations';
-import { X, Calendar, Clock, AlertCircle, Mail, User as UserIcon, Download } from 'lucide-react';
+import { X, Calendar, Clock, AlertCircle, Mail, User as UserIcon, Download, Loader2 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { buildDayAggregates } from '../lib/timeUtils';
 import { formatDate, formatHours } from '../lib/format';
@@ -34,11 +34,33 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
   const [selectedMonth, setSelectedMonth] = useState<number>(defaultMonth ?? new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(defaultYear ?? new Date().getFullYear());
   const [selectedWeek, setSelectedWeek] = useState<number>(0);
+  const [roles, setRoles] = useState<{ id: string; name: string; position: number }[]>([]);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [savingRoles, setSavingRoles] = useState(false);
+  const [loadingRoles, setLoadingRoles] = useState(false);
 
   useEffect(() => {
     setContractType(user.contractType || 'INDETERMINATO');
     setContractEnd(user.contractEndDate || '');
   }, [user]);
+
+  useEffect(() => {
+    const loadRoles = async () => {
+      if (!onUpdateContract) return;
+      setLoadingRoles(true);
+      try {
+        const [r, ur] = await Promise.all([
+          StorageService.getOrgRoles().catch(() => []),
+          StorageService.getUserRoles(user.id).catch(() => [])
+        ]);
+        setRoles(r);
+        setUserRoles(ur);
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+    loadRoles();
+  }, [user, onUpdateContract]);
 
   // Stats Calculation
   const totalLeaves = leaves.length;
@@ -200,6 +222,43 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
                     </div>
                   )}
                 </div>
+
+                {onUpdateContract && roles.length > 0 && (
+                  <div className="mt-4 p-3 rounded-xl bg-white border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm font-bold text-gray-700">{t.rolesTitle}</div>
+                      {savingRoles && <Loader2 size={16} className="animate-spin text-gray-400" />}
+                    </div>
+                    {loadingRoles ? (
+                      <div className="text-xs text-gray-400">Loading...</div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {roles.sort((a, b) => a.position - b.position).map(r => (
+                          <button
+                            key={r.id}
+                            onClick={() => setUserRoles(prev => prev.includes(r.id) ? prev.filter(x => x !== r.id) : [...prev, r.id])}
+                            className={`px-3 py-1 rounded-full text-xs border ${userRoles.includes(r.id) ? 'bg-brand-50 text-brand-700 border-brand-200' : 'bg-white text-gray-700 border-gray-200'}`}
+                          >
+                            {r.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex justify-end mt-3">
+                      <button
+                        onClick={async () => {
+                          setSavingRoles(true);
+                          await StorageService.assignRoles(user.id, userRoles);
+                          setSavingRoles(false);
+                        }}
+                        className="px-3 py-2 bg-brand-600 text-white rounded-lg text-xs font-bold hover:bg-brand-700 disabled:opacity-60"
+                        disabled={savingRoles}
+                      >
+                        {t.assignRoles}
+                      </button>
+                    </div>
+                  </div>
+                )}
             </div>
 
             {/* Stats Overview */}

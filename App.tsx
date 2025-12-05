@@ -7,16 +7,18 @@ import { Dashboard } from './components/Dashboard';
 import { Navbar } from './components/Navbar';
 import { LeaveRequests } from './components/LeaveRequests';
 import { Adjustments } from './components/Adjustments';
+import { Announcements } from './components/Announcements';
 import { Profile } from './components/Profile';
 import { StorageService } from './services/storageService';
 import { User, Language } from './types';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'leave' | 'adjustments' | 'profile'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'leave' | 'adjustments' | 'announcements' | 'profile'>('dashboard');
   const [language, setLanguageState] = useState<Language>('IT');
   const [leaveUnreadCount, setLeaveUnreadCount] = useState<number>(0);
   const [adjustmentsPendingCount, setAdjustmentsPendingCount] = useState<number>(0);
+  const [announcementsUnreadCount, setAnnouncementsUnreadCount] = useState<number>(0);
   const [isBooting, setIsBooting] = useState(true);
 
   const setLanguage = useCallback((lang: Language) => {
@@ -97,6 +99,9 @@ const App: React.FC = () => {
         const adjustmentNotifs = unread.filter(n => n.type?.toUpperCase().startsWith('ADJUSTMENT_')).length;
         setAdjustmentsPendingCount(adjustmentNotifs);
       }
+
+      const announcementUnread = unread.filter(n => n.type?.toUpperCase().startsWith('ANNOUNCEMENT_')).length;
+      setAnnouncementsUnreadCount(announcementUnread);
     } catch (err) {
       console.error('Notifications fetch error', err);
     }
@@ -140,6 +145,7 @@ const App: React.FC = () => {
         language={language} 
         leaveUnreadCount={leaveUnreadCount}
         adjustmentsPendingCount={adjustmentsPendingCount}
+        announcementsUnreadCount={announcementsUnreadCount}
       />
       
       <main className="flex-1 relative overflow-hidden flex flex-col order-first md:order-last">
@@ -150,6 +156,8 @@ const App: React.FC = () => {
              <LeaveRequests user={user} language={language} refreshNotifications={loadNotifications} />
            ) : activeTab === 'adjustments' ? (
              <Adjustments user={user} language={language} refreshCounts={loadNotifications} />
+           ) : activeTab === 'announcements' ? (
+             <Announcements user={user} language={language} />
            ) : (
              <Profile user={user} onLogout={handleLogout} language={language} setLanguage={setLanguage} />
            )}

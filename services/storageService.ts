@@ -398,5 +398,70 @@ export const StorageService = {
   // Account
   deleteAccount: async (): Promise<void> => {
     await fetchJson('/api/account', { method: 'DELETE' });
+  },
+
+  // Roles
+  getOrgRoles: async (): Promise<{ id: string; name: string; position: number }[]> => {
+    const { data } = await fetchJson<{ data: any[] }>('/api/org/roles');
+    return (data || []).map(r => ({ id: r.id, name: r.name, position: r.position ?? 0 }));
+  },
+
+  createRole: async (name: string): Promise<void> => {
+    await fetchJson('/api/org/roles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+  },
+
+  updateRole: async (id: string, payload: { name?: string; position?: number }): Promise<void> => {
+    await fetchJson('/api/org/roles', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...payload })
+    });
+  },
+
+  deleteRole: async (id: string): Promise<void> => {
+    await fetchJson('/api/org/roles', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+  },
+
+  assignRoles: async (targetUserId: string, roleIds: string[]): Promise<void> => {
+    await fetchJson('/api/org/roles/assign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetUserId, roleIds })
+    });
+  },
+
+  getUserRoles: async (targetUserId: string): Promise<string[]> => {
+    const { data } = await fetchJson<{ data: any[] }>(`/api/org/roles/assign?userId=${targetUserId}`);
+    return (data || []).map((r: any) => r.org_role_id || r.roleId || r.id);
+  },
+
+  // Announcements
+  getAnnouncements: async (): Promise<any[]> => {
+    const { data } = await fetchJson<{ data: any[] }>('/api/announcements');
+    return data || [];
+  },
+
+  createAnnouncement: async (payload: { title: string; body: string; audienceRoleIds?: string[] }): Promise<void> => {
+    await fetchJson('/api/announcements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  },
+
+  markAnnouncementRead: async (id?: string): Promise<void> => {
+    await fetchJson('/api/announcements', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
   }
 };
