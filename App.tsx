@@ -8,13 +8,14 @@ import { Navbar } from './components/Navbar';
 import { LeaveRequests } from './components/LeaveRequests';
 import { Adjustments } from './components/Adjustments';
 import { Announcements } from './components/Announcements';
+import { Roles } from './components/Roles';
 import { Profile } from './components/Profile';
 import { StorageService } from './services/storageService';
 import { User, Language } from './types';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'leave' | 'adjustments' | 'announcements' | 'profile'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'leave' | 'adjustments' | 'announcements' | 'roles' | 'profile'>('dashboard');
   const [language, setLanguageState] = useState<Language>('IT');
   const [leaveUnreadCount, setLeaveUnreadCount] = useState<number>(0);
   const [adjustmentsPendingCount, setAdjustmentsPendingCount] = useState<number>(0);
@@ -146,6 +147,7 @@ const App: React.FC = () => {
         leaveUnreadCount={leaveUnreadCount}
         adjustmentsPendingCount={adjustmentsPendingCount}
         announcementsUnreadCount={announcementsUnreadCount}
+        isAdmin={user.role === 'ADMIN'}
       />
       
       <main className="flex-1 relative overflow-hidden flex flex-col order-first md:order-last">
@@ -158,6 +160,8 @@ const App: React.FC = () => {
              <Adjustments user={user} language={language} refreshCounts={loadNotifications} />
            ) : activeTab === 'announcements' ? (
              <Announcements user={user} language={language} />
+           ) : activeTab === 'roles' ? (
+             <Roles user={user} language={language} />
            ) : (
              <Profile user={user} onLogout={handleLogout} language={language} setLanguage={setLanguage} />
            )}

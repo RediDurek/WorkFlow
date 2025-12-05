@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Language, User } from '../types';
 import { translations } from '../constants/translations';
 import { StorageService } from '../services/storageService';
-import { Send, Bell, Users, CheckCircle, Loader2 } from 'lucide-react';
+import { Send, Bell, Users, Loader2 } from 'lucide-react';
 
 interface AnnouncementsProps {
   user: User;
@@ -29,8 +29,6 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ user, language }) 
   const [audience, setAudience] = useState<string[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [newRoleName, setNewRoleName] = useState('');
-  const [creatingRole, setCreatingRole] = useState(false);
 
   const loadAll = async () => {
     setLoading(true);
@@ -76,19 +74,6 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ user, language }) 
     return `${t.recipientsRoles}: ${names.join(', ')}`;
   };
 
-  const handleCreateRole = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newRoleName.trim()) return;
-    setCreatingRole(true);
-    try {
-      await StorageService.createRole(newRoleName.trim());
-      setNewRoleName('');
-      await loadAll();
-    } finally {
-      setCreatingRole(false);
-    }
-  };
-
   return (
     <div className="max-w-3xl mx-auto w-full pt-safe px-4 pb-24">
       <header className="flex items-center justify-between mb-6 mt-6">
@@ -132,12 +117,6 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ user, language }) 
                 ))}
               </div>
               <p className="text-[11px] text-gray-400 mt-1">{t.rolesHint}</p>
-            </div>
-            <div className="border-t border-gray-100 pt-3">
-              <form onSubmit={handleCreateRole} className="flex gap-2 items-center">
-                <input value={newRoleName} onChange={e => setNewRoleName(e.target.value)} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm" placeholder={t.roleName} />
-                <button type="submit" disabled={creatingRole} className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-60">{creatingRole ? <Loader2 size={14} className="animate-spin" /> : t.createRole}</button>
-              </form>
             </div>
             <div className="flex justify-end">
               <button type="submit" disabled={isSending} className="px-4 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700 disabled:opacity-60 flex items-center gap-2">

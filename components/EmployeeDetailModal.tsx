@@ -54,7 +54,9 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
           StorageService.getUserRoles(user.id).catch(() => [])
         ]);
         setRoles(r);
-        setUserRoles(ur);
+        const baseId = r.find(role => role.name.toLowerCase() === 'base')?.id;
+        const merged = baseId ? Array.from(new Set([...ur, baseId])) : ur;
+        setUserRoles(merged);
       } finally {
         setLoadingRoles(false);
       }
@@ -233,22 +235,33 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({ user, 
                       <div className="text-xs text-gray-400">Loading...</div>
                     ) : (
                       <div className="flex flex-wrap gap-2">
-                        {roles.sort((a, b) => a.position - b.position).map(r => (
-                          <button
-                            key={r.id}
-                            onClick={() => setUserRoles(prev => prev.includes(r.id) ? prev.filter(x => x !== r.id) : [...prev, r.id])}
-                            className={`px-3 py-1 rounded-full text-xs border ${userRoles.includes(r.id) ? 'bg-brand-50 text-brand-700 border-brand-200' : 'bg-white text-gray-700 border-gray-200'}`}
-                          >
-                            {r.name}
-                          </button>
-                        ))}
+                        {roles.sort((a, b) => a.position - b.position).map(r => {
+                          const isBase = r.name.toLowerCase() === 'base';
+                          const selected = userRoles.includes(r.id) || isBase;
+                          return (
+                            <button
+                              key={r.id}
+                              type="button"
+                              disabled={isBase}
+                              onClick={() => {
+                                if (isBase) return;
+                                setUserRoles(prev => prev.includes(r.id) ? prev.filter(x => x !== r.id) : [...prev, r.id]);
+                              }}
+                              className={`px-3 py-1 rounded-full text-xs border ${selected ? 'bg-brand-50 text-brand-700 border-brand-200' : 'bg-white text-gray-700 border-gray-200'} ${isBase ? 'cursor-not-allowed opacity-70' : ''}`}
+                            >
+                              {r.name}{isBase ? ' (default)' : ''}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                     <div className="flex justify-end mt-3">
                       <button
                         onClick={async () => {
                           setSavingRoles(true);
-                          await StorageService.assignRoles(user.id, userRoles);
+                          const baseId = roles.find(role => role.name.toLowerCase() === 'base')?.id;
+                          const payload = baseId ? Array.from(new Set([...userRoles, baseId])) : userRoles;
+                          await StorageService.assignRoles(user.id, payload);
                           setSavingRoles(false);
                         }}
                         className="px-3 py-2 bg-brand-600 text-white rounded-lg text-xs font-bold hover:bg-brand-700 disabled:opacity-60"

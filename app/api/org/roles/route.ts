@@ -12,7 +12,16 @@ export async function GET() {
       .eq('org_id', user.orgId)
       .order('position', { ascending: true });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-    return NextResponse.json({ data });
+    let roles = data || [];
+    if (roles.length === 0) {
+      // ensure a default/base role exists
+      const { error: insertErr, data: inserted } = await supabase
+        .from('org_roles')
+        .insert({ org_id: user.orgId, name: 'Base', position: 1 })
+        .select('*');
+      if (!insertErr && inserted) roles = inserted;
+    }
+    return NextResponse.json({ data: roles });
   } catch (err: any) {
     const status = err?.status || 500;
     return NextResponse.json({ error: err?.message || 'Server error' }, { status });

@@ -6,16 +6,17 @@ import { Language } from '../types';
 import { translations } from '../constants/translations';
 
 interface NavbarProps {
-  activeTab: 'dashboard' | 'leave' | 'adjustments' | 'announcements' | 'profile';
-  setActiveTab: (tab: 'dashboard' | 'leave' | 'adjustments' | 'announcements' | 'profile') => void;
+  activeTab: 'dashboard' | 'leave' | 'adjustments' | 'announcements' | 'roles' | 'profile';
+  setActiveTab: (tab: 'dashboard' | 'leave' | 'adjustments' | 'announcements' | 'roles' | 'profile') => void;
   onLogout: () => void;
   language: Language;
   leaveUnreadCount: number;
   adjustmentsPendingCount: number;
   announcementsUnreadCount: number;
+  isAdmin?: boolean;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogout, language, leaveUnreadCount, adjustmentsPendingCount, announcementsUnreadCount }) => {
+export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogout, language, leaveUnreadCount, adjustmentsPendingCount, announcementsUnreadCount, isAdmin }) => {
   const t = translations[language];
 
   return (
@@ -73,6 +74,20 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogou
         </div>
         <span className="text-xs md:text-base font-medium mt-1 md:mt-0">{t.navAnnouncements}</span>
       </button>
+
+      {isAdmin && (
+        <button
+          onClick={() => setActiveTab('roles')}
+          className={`flex flex-col md:flex-row md:w-full md:space-x-3 items-center justify-center p-2 rounded-xl transition-colors ${
+            activeTab === 'roles' ? 'text-brand-600 bg-brand-50' : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          <div className="relative">
+            <UserCircle size={24} />
+          </div>
+          <span className="text-xs md:text-base font-medium mt-1 md:mt-0">{t.navRoles}</span>
+        </button>
+      )}
 
       <button
         onClick={() => setActiveTab('profile')}
