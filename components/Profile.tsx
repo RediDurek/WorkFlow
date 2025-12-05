@@ -50,7 +50,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
       label += ` (${t.contractExpiresOn} ${formatDate(user.contractEndDate, locale)})`;
     }
     setContractInfo({ type, badge, label });
-  }, [user]);
+  }, [user, language, locale, t]);
 
   const handleExport = async () => {
     const docContent = await StorageService.exportDataAsDoc(user.role === 'EMPLOYEE' ? user.id : undefined, user.orgId, exportMonth, exportYear, language, [user]);
@@ -101,8 +101,8 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, language, setL
         >
             <option value="IT">Italiano</option>
             <option value="EN">English</option>
-            <option value="ES">Espa?ol</option>
-            <option value="FR">Fran?ais</option>
+            <option value="ES">Espanol</option>
+            <option value="FR">Francais</option>
             <option value="DE">Deutsch</option>
         </select>
       </header>

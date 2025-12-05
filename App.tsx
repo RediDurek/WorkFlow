@@ -14,18 +14,31 @@ import { User, Language } from './types';
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'leave' | 'adjustments' | 'profile'>('dashboard');
-  const [language, setLanguage] = useState<Language>('IT');
+  const [language, setLanguageState] = useState<Language>('IT');
   const [leaveUnreadCount, setLeaveUnreadCount] = useState<number>(0);
   const [adjustmentsPendingCount, setAdjustmentsPendingCount] = useState<number>(0);
 
+  const setLanguage = useCallback((lang: Language) => {
+    setLanguageState(lang);
+    try {
+      localStorage.setItem('wf_lang', lang);
+    } catch {}
+  }, [setLanguageState]);
+
   useEffect(() => {
-    // Detect Browser Language on Load
-    const browserLang = navigator.language.split('-')[0].toUpperCase();
-    if (['IT', 'EN', 'ES', 'FR', 'DE'].includes(browserLang)) {
-        setLanguage(browserLang as Language);
-    } else {
-        setLanguage('IT'); // Default fallback
-    }
+    // Detect Browser Language on Load or restore saved preference
+    const supported = ['IT', 'EN', 'ES', 'FR', 'DE'];
+    let initial: Language = 'IT';
+    try {
+      const saved = localStorage.getItem('wf_lang')?.toUpperCase();
+      if (saved && supported.includes(saved)) {
+        initial = saved as Language;
+      } else {
+        const browserLang = navigator.language.split('-')[0].toUpperCase();
+        if (supported.includes(browserLang)) initial = browserLang as Language;
+      }
+    } catch {}
+    setLanguage(initial);
 
     const initUser = async () => {
       try {
