@@ -116,16 +116,16 @@ const App: React.FC = () => {
   }, [user, loadNotifications]);
 
   useEffect(() => {
-    if (activeTab === 'leave') {
-      (async () => {
-        try {
-          await StorageService.markNotificationsRead();
-          await loadNotifications();
-        } catch (err) {
-          console.error('Mark read error', err);
-        }
-      })();
-    }
+    if (activeTab !== 'leave' && activeTab !== 'announcements') return;
+    (async () => {
+      try {
+        if (activeTab === 'leave') await StorageService.markNotificationsRead();
+        if (activeTab === 'announcements') await StorageService.markAnnouncementRead();
+        await loadNotifications();
+      } catch (err) {
+        console.error('Mark read error', err);
+      }
+    })();
   }, [activeTab, loadNotifications]);
 
   if (isBooting) {
