@@ -87,11 +87,12 @@ const App: React.FC = () => {
       const leaveUnread = unread.filter(n => n.type?.toUpperCase().startsWith('LEAVE_')).length;
       setLeaveUnreadCount(leaveUnread);
 
-      const adjustments = await StorageService.getAdjustments(user.role === 'ADMIN' ? undefined : user.id);
       if (user.role === 'ADMIN') {
+        const adjustments = await StorageService.getAdjustments();
         setAdjustmentsPendingCount(adjustments.filter((a: any) => a.status === 'PENDING').length);
       } else {
-        setAdjustmentsPendingCount(adjustments.filter((a: any) => a.status === 'PENDING').length);
+        const adjustmentNotifs = unread.filter(n => n.type?.toUpperCase().startsWith('ADJUSTMENT_')).length;
+        setAdjustmentsPendingCount(adjustmentNotifs);
       }
     } catch (err) {
       console.error('Notifications fetch error', err);
