@@ -17,6 +17,7 @@ const App: React.FC = () => {
   const [language, setLanguageState] = useState<Language>('IT');
   const [leaveUnreadCount, setLeaveUnreadCount] = useState<number>(0);
   const [adjustmentsPendingCount, setAdjustmentsPendingCount] = useState<number>(0);
+  const [isBooting, setIsBooting] = useState(true);
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
@@ -47,10 +48,12 @@ const App: React.FC = () => {
         if (resp.ok && data.user) setUser(data.user);
       } catch (err) {
         console.error('Init session error', err);
+      } finally {
+        setIsBooting(false);
       }
     };
     initUser();
-  }, []);
+  }, [setLanguage]);
 
   const handleLogin = (newUser: User) => setUser(newUser);
   const handleLogout = () => {
@@ -118,6 +121,10 @@ const App: React.FC = () => {
       })();
     }
   }, [activeTab, loadNotifications]);
+
+  if (isBooting) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
 
   if (!user) {
     return <Auth onLogin={handleLogin} language={language} setLanguage={setLanguage} />;
