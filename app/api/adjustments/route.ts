@@ -84,10 +84,19 @@ export async function PATCH(req: Request) {
     if (!id || !status) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
     const supabase = supabaseServer();
+    const { data: existing } = await supabase
+      .from('time_adjustments')
+      .select('*')
+      .eq('id', id)
+      .eq('org_id', user.orgId)
+      .single();
+    if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
     const { data, error } = await supabase
       .from('time_adjustments')
       .update({ status, approver_id: user.id, reviewed_at: new Date().toISOString() })
       .eq('id', id)
+      .eq('org_id', user.orgId)
       .select('user_id, org_id, date, clock_in_new, clock_out_new, pause_start, pause_end')
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
@@ -101,7 +110,7 @@ export async function PATCH(req: Request) {
       const startOfDay = new Date(`${data.date}T00:00:00`).toISOString();
       const endOfDay = new Date(`${data.date}T23:59:59`).toISOString();
       // remove existing logs of the day
-      await supabase.from('time_logs').delete().eq('user_id', data.user_id).gte('timestamp', startOfDay).lte('timestamp', endOfDay);
+      await supabase.from('time_logs').delete().eq('user_id', data.user_id).eq('org_id', user.orgId).gte('timestamp', startOfDay).lte('timestamp', endOfDay);
       // insert corrected logs (with optional pause)
       if (pauseStartTs && pauseEndTs) {
         await supabase.from('time_logs').insert([

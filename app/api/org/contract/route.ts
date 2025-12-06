@@ -11,6 +11,9 @@ export async function PATCH(req: Request) {
     if (!targetUserId || !contractType) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
     const supabase = supabaseServer();
+    const { data: target } = await supabase.from('users').select('id').eq('id', targetUserId).eq('org_id', user.orgId).single();
+    if (!target) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
     const { data: updatedUser, error } = await supabase
       .from('users')
       .update({
@@ -19,6 +22,7 @@ export async function PATCH(req: Request) {
         status: 'ACTIVE'
       })
       .eq('id', targetUserId)
+      .eq('org_id', user.orgId)
       .select()
       .single();
 

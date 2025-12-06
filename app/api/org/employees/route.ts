@@ -31,7 +31,10 @@ export async function PATCH(req: Request) {
     if (!targetUserId || !status) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
     const supabase = supabaseServer();
-    const { error } = await supabase.from('users').update({ status }).eq('id', targetUserId);
+    const { data: target } = await supabase.from('users').select('id').eq('id', targetUserId).eq('org_id', user.orgId).single();
+    if (!target) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+    const { error } = await supabase.from('users').update({ status }).eq('id', targetUserId).eq('org_id', user.orgId);
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ success: true });
   } catch (err: any) {
@@ -49,9 +52,12 @@ export async function DELETE(req: Request) {
     if (!targetUserId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
 
     const supabase = supabaseServer();
-    await supabase.from('time_logs').delete().eq('user_id', targetUserId);
-    await supabase.from('leave_requests').delete().eq('user_id', targetUserId);
-    const { error } = await supabase.from('users').delete().eq('id', targetUserId);
+    const { data: target } = await supabase.from('users').select('id').eq('id', targetUserId).eq('org_id', user.orgId).single();
+    if (!target) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+    await supabase.from('time_logs').delete().eq('user_id', targetUserId).eq('org_id', user.orgId);
+    await supabase.from('leave_requests').delete().eq('user_id', targetUserId).eq('org_id', user.orgId);
+    const { error } = await supabase.from('users').delete().eq('id', targetUserId).eq('org_id', user.orgId);
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ success: true });
   } catch (err: any) {
